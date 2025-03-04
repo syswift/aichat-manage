@@ -12,7 +12,16 @@ import { MotionLazy } from 'src/components/animate/motion-lazy';
 import { detectSettings } from 'src/components/settings/server';
 import { SettingsDrawer, defaultSettings, SettingsProvider } from 'src/components/settings';
 
-import { AuthProvider } from 'src/auth/context/jwt';
+import { AuthProvider as JwtAuthProvider } from 'src/auth/context/jwt';
+import { AuthProvider as SupabaseAuthProvider } from 'src/auth/context/supabase';
+
+// ----------------------------------------------------------------------
+
+const AuthProvider =
+  (CONFIG.auth.method === 'supabase' && SupabaseAuthProvider) ||
+  JwtAuthProvider;
+
+// ----------------------------------------------------------------------
 
 // ----------------------------------------------------------------------
 
