@@ -1,7 +1,7 @@
 {
   "name": "@minimal-kit/starter-next-js",
   "author": "Minimals",
-  "version": "6.3.0",
+  "version": "1.0.0",
   "description": "Next Starter & JavaScript",
   "private": true,
   "scripts": {

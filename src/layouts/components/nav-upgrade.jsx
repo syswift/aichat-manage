@@ -6,8 +6,6 @@ import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
 import Typography from '@mui/material/Typography';
 
-import { paths } from 'src/routes/paths';
-
 import { CONFIG } from 'src/global-config';
 
 import { Label } from 'src/components/label';
@@ -42,7 +40,7 @@ export function NavUpgrade({ sx, ...other }) {
               borderBottomLeftRadius: 2,
             }}
           >
-            Free
+            教师
           </Label>
         </Box>
 
@@ -54,19 +52,19 @@ export function NavUpgrade({ sx, ...other }) {
           >
             {user?.displayName}
           </Typography>
-
+          {/*
           <Typography
             variant="body2"
             noWrap
             sx={{ color: 'var(--layout-nav-text-disabled-color)' }}
           >
             {user?.email}
-          </Typography>
+          </Typography>*/}
         </Box>
-
+            {/*
         <Button variant="contained" href={paths.minimalStore} target="_blank" rel="noopener">
           Upgrade to Pro
-        </Button>
+        </Button>*/}
       </Box>
     </Box>
   );

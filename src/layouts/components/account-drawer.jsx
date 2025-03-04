@@ -1,13 +1,11 @@
 'use client';
 
-import { varAlpha } from 'minimal-shared/utils';
 import { useBoolean } from 'minimal-shared/hooks';
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Avatar from '@mui/material/Avatar';
 import Drawer from '@mui/material/Drawer';
-import Tooltip from '@mui/material/Tooltip';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
@@ -17,8 +15,6 @@ import { paths } from 'src/routes/paths';
 import { usePathname } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
-import { _mock } from 'src/_mock';
-
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -26,7 +22,6 @@ import { AnimateBorder } from 'src/components/animate';
 
 import { useMockedUser } from 'src/auth/hooks';
 
-import { UpgradeBlock } from './nav-upgrade';
 import { AccountButton } from './account-button';
 import { SignOutButton } from './sign-out-button';
 
@@ -150,11 +145,11 @@ export function AccountDrawer({ data = [], sx, ...other }) {
               {user?.displayName}
             </Typography>
 
-            <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }} noWrap>
+            {/*<Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }} noWrap>
               {user?.email}
-            </Typography>
+            </Typography>*/}
           </Box>
-
+          {/*
           <Box
             sx={{
               p: 3,
@@ -189,13 +184,13 @@ export function AccountDrawer({ data = [], sx, ...other }) {
                 <Iconify icon="mingcute:add-line" />
               </IconButton>
             </Tooltip>
-          </Box>
+          </Box>*/}
 
           {renderList()}
-
+          {/*
           <Box sx={{ px: 2.5, py: 3 }}>
             <UpgradeBlock />
-          </Box>
+          </Box>*/}
         </Scrollbar>
 
         <Box sx={{ p: 2.5 }}>
