@@ -64,13 +64,13 @@ export const navData = [
     subheader: 'Management',
     items: [
       {
-        title: 'Group',
-        path: paths.dashboard.group.root,
+        title: '教材管理',
+        path: paths.dashboard.textbook.audio,
         icon: ICONS.user,
         children: [
-          { title: 'Four', path: paths.dashboard.group.root },
-          { title: 'Five', path: paths.dashboard.group.five },
-          { title: 'Six', path: paths.dashboard.group.six },
+          { title: '音频', path: paths.dashboard.textbook.audio },
+          { title: '视频', path: paths.dashboard.textbook.video },
+          { title: '绘本', path: paths.dashboard.textbook.picbook },
         ],
       },
     ],
