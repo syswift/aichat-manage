@@ -1,8 +1,5 @@
-import { _id } from 'src/_mock/assets';
 
 // ----------------------------------------------------------------------
-
-const MOCK_ID = _id[1];
 
 const ROOTS = {
   AUTH: '/auth',
@@ -49,16 +46,6 @@ export const paths = {
     root: ROOTS.DASHBOARD,
     two: `${ROOTS.DASHBOARD}/two`,
     three: `${ROOTS.DASHBOARD}/three`,
-    user: {
-      root: `${ROOTS.DASHBOARD}/user`,
-      new: `${ROOTS.DASHBOARD}/user/new`,
-      list: `${ROOTS.DASHBOARD}/user/list`,
-      cards: `${ROOTS.DASHBOARD}/user/cards`,
-      profile: `${ROOTS.DASHBOARD}/user/profile`,
-      account: `${ROOTS.DASHBOARD}/user/account`,
-      edit: (id) => `${ROOTS.DASHBOARD}/user/${id}/edit`,
-      demo: { edit: `${ROOTS.DASHBOARD}/user/${MOCK_ID}/edit` },
-    },
     textbook: {
       audio: `${ROOTS.DASHBOARD}/textbook/audio`,
       video: `${ROOTS.DASHBOARD}/textbook/video`,
