@@ -1,11 +1,11 @@
 import { CONFIG } from 'src/global-config';
 
-import { BlankView } from 'src/sections/blank/view';
+import { AudioListView } from 'src/sections/dashboard/textbook/audio';
 
 // ----------------------------------------------------------------------
 
 export const metadata = { title: `Page audio | Dashboard - ${CONFIG.appName}` };
 
 export default function Page() {
-  return <BlankView title="Page audio" />;
+  return <AudioListView />;
 }
