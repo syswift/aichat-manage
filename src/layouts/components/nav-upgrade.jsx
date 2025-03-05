@@ -1,4 +1,5 @@
 import { m } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import { varAlpha } from 'minimal-shared/utils';
 
 import Box from '@mui/material/Box';
@@ -10,12 +11,36 @@ import { CONFIG } from 'src/global-config';
 
 import { Label } from 'src/components/label';
 
-import { useMockedUser } from 'src/auth/hooks';
+import { useSupabaseUser } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
 export function NavUpgrade({ sx, ...other }) {
-  const { user } = useMockedUser();
+  const [userData, setUserData] = useState(null);
+  const userResult = useSupabaseUser();
+  
+  useEffect(() => {
+    async function resolveUser() {
+      try {
+        if (userResult && userResult.then) {
+          // If the entire userResult is a Promise
+          const resolved = await userResult;
+          setUserData(resolved.user);
+        } else if (userResult && userResult.user && userResult.user.then) {
+          // If user property is a Promise
+          const resolvedUser = await userResult.user;
+          setUserData(resolvedUser);
+        } else {
+          // If it's already resolved
+          setUserData(userResult?.user || null);
+        }
+      } catch (err) {
+        console.error('Failed to resolve user data', err);
+      }
+    }
+    
+    resolveUser();
+  }, [userResult]);
 
   return (
     <Box
@@ -24,8 +49,8 @@ export function NavUpgrade({ sx, ...other }) {
     >
       <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
         <Box sx={{ position: 'relative' }}>
-          <Avatar src={user?.photoURL} alt={user?.displayName} sx={{ width: 48, height: 48 }}>
-            {user?.displayName?.charAt(0).toUpperCase()}
+          <Avatar src={userData?.avatar_url} alt={userData?.displayName} sx={{ width: 48, height: 48 }}>
+            {userData?.displayName?.charAt(0).toUpperCase()}
           </Avatar>
 
           <Label
@@ -50,21 +75,11 @@ export function NavUpgrade({ sx, ...other }) {
             noWrap
             sx={{ mb: 1, color: 'var(--layout-nav-text-primary-color)' }}
           >
-            {user?.displayName}
+            {userData?.full_name}
           </Typography>
-          {/*
-          <Typography
-            variant="body2"
-            noWrap
-            sx={{ color: 'var(--layout-nav-text-disabled-color)' }}
-          >
-            {user?.email}
-          </Typography>*/}
+          {/* ...existing code... */}
         </Box>
-            {/*
-        <Button variant="contained" href={paths.minimalStore} target="_blank" rel="noopener">
-          Upgrade to Pro
-        </Button>*/}
+        {/* ...existing code... */}
       </Box>
     </Box>
   );

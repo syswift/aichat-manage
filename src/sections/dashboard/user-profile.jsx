@@ -10,12 +10,24 @@ export function UserProfile() {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user } = useSupabaseUser();
+  const userResult = useSupabaseUser();
+  //console.log("userResult", userResult);
 
   useEffect(() => {
     async function fetchUserData() {
       try {
-        setUserData(user);
+        if (userResult.user && userResult.user.then) {
+          // If user is a Promise
+          const resolvedUser = await userResult.user;
+          setUserData(resolvedUser);
+        } else if (userResult.then) {
+          // If the entire userResult is a Promise
+          const resolved = await userResult;
+          setUserData(resolved.user);
+        } else {
+          // If it's already resolved
+          setUserData(userResult.user);
+        }
       } catch (err) {
         setError('Failed to load user data');
         console.error(err);
@@ -25,7 +37,7 @@ export function UserProfile() {
     }
 
     fetchUserData();
-  }, [user]);
+  }, [userResult]);
 
   if (loading) {
     return (
@@ -51,9 +63,6 @@ export function UserProfile() {
           <Typography>User ID: {userData.id}</Typography>
           {userData.username && (
             <Typography>Username: {userData.username}</Typography>
-          )}
-          {userData.email && (
-            <Typography>Email: {userData.email}</Typography>
           )}
           {userData.full_name && (
             <Typography>Name: {userData.full_name}</Typography>

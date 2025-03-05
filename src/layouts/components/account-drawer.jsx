@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useBoolean } from 'minimal-shared/hooks';
 
 import Box from '@mui/material/Box';
@@ -20,7 +21,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { AnimateBorder } from 'src/components/animate';
 
-import { useMockedUser } from 'src/auth/hooks';
+import { useSupabaseUser } from 'src/auth/hooks';
 
 import { AccountButton } from './account-button';
 import { SignOutButton } from './sign-out-button';
@@ -29,10 +30,34 @@ import { SignOutButton } from './sign-out-button';
 
 export function AccountDrawer({ data = [], sx, ...other }) {
   const pathname = usePathname();
-
-  const { user } = useMockedUser();
+  
+  const [userData, setUserData] = useState(null);
+  const userResult = useSupabaseUser();
 
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
+  
+  useEffect(() => {
+    async function resolveUser() {
+      try {
+        if (userResult && userResult.then) {
+          // If the entire userResult is a Promise
+          const resolved = await userResult;
+          setUserData(resolved.user);
+        } else if (userResult && userResult.user && userResult.user.then) {
+          // If user property is a Promise
+          const resolvedUser = await userResult.user;
+          setUserData(resolvedUser);
+        } else {
+          // If it's already resolved
+          setUserData(userResult?.user || null);
+        }
+      } catch (err) {
+        console.error('Failed to resolve user data', err);
+      }
+    }
+    
+    resolveUser();
+  }, [userResult]);
 
   const renderAvatar = () => (
     <AnimateBorder
@@ -41,8 +66,8 @@ export function AccountDrawer({ data = [], sx, ...other }) {
         primaryBorder: { size: 120, sx: { color: 'primary.main' } },
       }}
     >
-      <Avatar src={user?.photoURL} alt={user?.displayName} sx={{ width: 1, height: 1 }}>
-        {user?.displayName?.charAt(0).toUpperCase()}
+      <Avatar src={userData?.avatar_url} alt={userData?.full_name} sx={{ width: 1, height: 1 }}>
+        {userData?.full_name?.charAt(0).toUpperCase()}
       </Avatar>
     </AnimateBorder>
   );
@@ -105,8 +130,8 @@ export function AccountDrawer({ data = [], sx, ...other }) {
     <>
       <AccountButton
         onClick={onOpen}
-        photoURL={user?.photoURL}
-        displayName={user?.displayName}
+        photoURL={userData?.avatar_url}
+        displayName={userData?.full_name}
         sx={sx}
         {...other}
       />
@@ -142,15 +167,14 @@ export function AccountDrawer({ data = [], sx, ...other }) {
             {renderAvatar()}
 
             <Typography variant="subtitle1" noWrap sx={{ mt: 2 }}>
-              {user?.displayName}
+              {userData?.full_name}
             </Typography>
 
             {/*<Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }} noWrap>
               {user?.email}
             </Typography>*/}
           </Box>
-          {/*
-          <Box
+          {/*<Box
             sx={{
               p: 3,
               gap: 1,
@@ -187,8 +211,7 @@ export function AccountDrawer({ data = [], sx, ...other }) {
           </Box>*/}
 
           {renderList()}
-          {/*
-          <Box sx={{ px: 2.5, py: 3 }}>
+          {/*<Box sx={{ px: 2.5, py: 3 }}>
             <UpgradeBlock />
           </Box>*/}
         </Scrollbar>
