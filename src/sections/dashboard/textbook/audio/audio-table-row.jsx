@@ -58,7 +58,7 @@ export function AudioTableRow({ row, selected, editHref, onSelectRow, onDeleteRo
         <li>
           <MenuItem component={RouterLink} href={editHref} onClick={() => menuActions.onClose()}>
             <Iconify icon="solar:pen-bold" />
-            Edit
+            编辑
           </MenuItem>
         </li>
 
@@ -70,7 +70,7 @@ export function AudioTableRow({ row, selected, editHref, onSelectRow, onDeleteRo
           sx={{ color: 'error.main' }}
         >
           <Iconify icon="solar:trash-bin-trash-bold" />
-          Delete
+          删除
         </MenuItem>
       </MenuList>
     </CustomPopover>
@@ -80,11 +80,11 @@ export function AudioTableRow({ row, selected, editHref, onSelectRow, onDeleteRo
     <ConfirmDialog
       open={confirmDialog.value}
       onClose={confirmDialog.onFalse}
-      title="Delete"
-      content="Are you sure want to delete?"
+      title="删除"
+      content="你确认要删除这个音频吗?"
       action={
         <Button variant="contained" color="error" onClick={onDeleteRow}>
-          Delete
+          删除
         </Button>
       }
     />
@@ -145,10 +145,10 @@ export function AudioTableRow({ row, selected, editHref, onSelectRow, onDeleteRo
 
         <TableCell>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Tooltip title="Quick Edit" placement="top" arrow>
+            <Tooltip title="快速编辑" placement="top" arrow>
               <IconButton
                 color={quickEditForm.value ? 'inherit' : 'default'}
-                onClick={quickEditForm.onTrue}
+                //onClick={quickEditForm.onTrue}
               >
                 <Iconify icon="solar:pen-bold" />
               </IconButton>

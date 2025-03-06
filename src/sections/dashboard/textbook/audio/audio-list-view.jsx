@@ -50,8 +50,8 @@ const TABLE_HEAD = [
     { id: 'name', label: '名称' },
     { id: 'phoneNumber', label: '类型', width: 220 },
     { id: 'company', label: '简介', width: 220 },
-    { id: 'status', label: '状态', width: 120 },
-    { id: 'role', label: '操作', width: 100 },
+    { id: 'status', label: '状态', width: 150 },
+    { id: 'role', label: '操作', width: 120 },
   ];
 
   // 使用 supabase 进行操作
