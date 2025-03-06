@@ -23,7 +23,7 @@ export function UploadPlaceholder({ sx, className, ...other }) {
     >
       <UploadIllustration hideBackground sx={{ width: 200 }} />
       <PlaceholderContent>
-        <div className={uploadPlaceholderClasses.title}>Drop or select file</div>
+        <div className={uploadPlaceholderClasses.title}>上传的文件拖拽或选择到这</div>
         <div className={uploadPlaceholderClasses.description}>
           Drop files here or click to
           <span>browse</span>

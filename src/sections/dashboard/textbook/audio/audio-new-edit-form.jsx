@@ -18,9 +18,8 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
 import { Label } from 'src/components/label';
+import { Upload } from 'src/components/upload';
 import { toast } from 'src/components/snackbar';
-import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
 // ----------------------------------------------------------------------
 
@@ -51,15 +50,11 @@ export const NewUserSchema = zod.object({
 
 export function AudioNewEditForm({ currentUser }) {
   const router = useRouter();
-
-  const [files, setFiles] = useState([]);
-
-  const handleDrop = useCallback(
-    (acceptedFiles) => {
-      setFiles([...files, ...acceptedFiles]);
-    },
-    [files]
-  );
+  const [file, setFile] = useState(null);
+  const handleDropSingleFile = useCallback((acceptedFiles) => {
+    const newFile = acceptedFiles[0];
+    setFile(newFile);
+  }, []);
 
   const defaultValues = {
     status: '',
@@ -93,7 +88,7 @@ export function AudioNewEditForm({ currentUser }) {
   } = methods;
 
   const values = watch();
-
+  
   const onSubmit = handleSubmit(async (data) => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -125,30 +120,11 @@ export function AudioNewEditForm({ currentUser }) {
             )}
 
             <Box sx={{ mb: 5 }}>
-              <UploadBox
-                onDrop={handleDrop}
+            <Upload 
                 maxSize={50 * 1024 * 1024} // 50MB
-                placeholder={
-                  <Box
-                    sx={{
-                      gap: 0.5,
-                      display: 'flex',
-                      alignItems: 'center',
-                      color: 'text.disabled',
-                      flexDirection: 'column',
-                    }}
-                  >
-                    <Iconify icon="eva:cloud-upload-fill" width={40} />
-                    <Typography variant="body2">上传音频</Typography>
-                  </Box>
-                }
-                sx={{
-                  py: 10,
-                  width: 'auto',
-                  height: 'auto',
-                  borderRadius: 1.5,
-                }}
-              />
+                value={file} 
+                onDrop={handleDropSingleFile} 
+                onDelete={() => setFile(null)} />
             </Box>
 
             {currentUser && (
