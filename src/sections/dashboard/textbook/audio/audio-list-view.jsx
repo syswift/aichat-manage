@@ -1,15 +1,124 @@
 'use client';
 
+import { useState, useCallback } from 'react';
+import { varAlpha } from 'minimal-shared/utils';
+import { useBoolean, useSetState } from 'minimal-shared/hooks';
+
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import Card from '@mui/material/Card';
 import Button from '@mui/material/Button';
 
 import { paths } from 'src/routes/paths';
 
 import { DashboardContent } from 'src/layouts/dashboard';
+import {_roles, _userList, USER_STATUS_OPTIONS } from 'src/_mock';
 
+import { Label } from 'src/components/label';
+import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
+import { ConfirmDialog } from 'src/components/custom-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import {
+    useTable,
+    rowInPage,
+    getComparator,
+  } from 'src/components/table';
+
+  import { AudioTableToolbar } from './audio-table-toolbar';
+  import { AudioTableFiltersResult } from './audio-table-filters-result';
+
+  // ----------------------------------------------------------------------
+
+const STATUS_OPTIONS = [{ value: 'all', label: '全部' }, ...USER_STATUS_OPTIONS];
+
+const TABLE_HEAD = [
+    { id: 'name', label: '名称' },
+    { id: 'phoneNumber', label: '类型', width: 180 },
+    { id: 'company', label: '简介', width: 220 },
+    { id: 'role', label: '操作', width: 180 },
+  ];
 
 export function AudioListView() {
+    const table = useTable();
+
+    const confirmDialog = useBoolean();
+
+    const [tableData, setTableData] = useState(_userList);
+
+    const filters = useSetState({ name: '', role: [], status: 'all' });
+    const { state: currentFilters, setState: updateFilters } = filters;
+
+    const dataFiltered = applyFilter({
+        inputData: tableData,
+        comparator: getComparator(table.order, table.orderBy),
+        filters: currentFilters,
+    });
+
+    const dataInPage = rowInPage(dataFiltered, table.page, table.rowsPerPage);
+
+    const canReset =
+        !!currentFilters.name || currentFilters.role.length > 0 || currentFilters.status !== 'all';
+
+    const notFound = (!dataFiltered.length && canReset) || !dataFiltered.length;
+
+    const handleDeleteRow = useCallback(
+        (id) => {
+        const deleteRow = tableData.filter((row) => row.id !== id);
+
+        toast.success('Delete success!');
+
+        setTableData(deleteRow);
+
+        table.onUpdatePageDeleteRow(dataInPage.length);
+        },
+        [dataInPage.length, table, tableData]
+    );
+
+    const handleDeleteRows = useCallback(() => {
+        const deleteRows = tableData.filter((row) => !table.selected.includes(row.id));
+
+        toast.success('Delete success!');
+
+        setTableData(deleteRows);
+
+        table.onUpdatePageDeleteRows(dataInPage.length, dataFiltered.length);
+    }, [dataFiltered.length, dataInPage.length, table, tableData]);
+
+    const handleFilterStatus = useCallback(
+        (event, newValue) => {
+        table.onResetPage();
+        updateFilters({ status: newValue });
+        },
+        [updateFilters, table]
+    );
+
+    const renderConfirmDialog = () => (
+        <ConfirmDialog
+        open={confirmDialog.value}
+        onClose={confirmDialog.onFalse}
+        title="Delete"
+        content={
+            <>
+            Are you sure want to delete <strong> {table.selected.length} </strong> items?
+            </>
+        }
+        action={
+            <Button
+            variant="contained"
+            color="error"
+            onClick={() => {
+                handleDeleteRows();
+                confirmDialog.onFalse();
+            }}
+            >
+            Delete
+            </Button>
+        }
+        />
+    );
+
+
     return (
         <DashboardContent>
             <CustomBreadcrumbs
@@ -25,11 +134,97 @@ export function AudioListView() {
                 variant="contained"
                 startIcon={<Iconify icon="mingcute:add-line" />}
                 >
-                New user
+                新增音频
                 </Button>
             }
             sx={{ mb: { xs: 3, md: 5 } }}
             />
+
+            <Card>
+                <Tabs
+                    value={currentFilters.status}
+                    onChange={handleFilterStatus}
+                    sx={[
+                    (theme) => ({
+                        px: 2.5,
+                        boxShadow: `inset 0 -2px 0 0 ${varAlpha(theme.vars.palette.grey['500Channel'], 0.08)}`,
+                    }),
+                    ]}
+                >
+                    {STATUS_OPTIONS.map((tab) => (
+                    <Tab
+                        key={tab.value}
+                        iconPosition="end"
+                        value={tab.value}
+                        label={tab.label}
+                        icon={
+                        <Label
+                            variant={
+                            ((tab.value === 'all' || tab.value === currentFilters.status) && 'filled') ||
+                            'soft'
+                            }
+                            color={
+                            (tab.value === 'active' && 'success') ||
+                            (tab.value === 'pending' && 'warning') ||
+                            (tab.value === 'banned' && 'error') ||
+                            (tab.value === 'rejected' && 'info') ||
+                            'default'
+                            }
+                        >
+                            {['active', 'pending', 'banned', 'rejected'].includes(tab.value)
+                            ? tableData.filter((user) => user.status === tab.value).length
+                            : tableData.length}
+                        </Label>
+                        }
+                    />
+                    ))}
+                </Tabs>
+                <AudioTableToolbar
+                    filters={filters}
+                    onResetPage={table.onResetPage}
+                    options={{ roles: _roles }}
+                />
+
+                {canReset && (
+                    <AudioTableFiltersResult
+                    filters={filters}
+                    totalResults={dataFiltered.length}
+                    onResetPage={table.onResetPage}
+                    sx={{ p: 2.5, pt: 0 }}
+                    />
+                )}
+            </Card>
         </DashboardContent>
     );
 }
+
+// ----------------------------------------------------------------------
+
+function applyFilter({ inputData, comparator, filters }) {
+    const { name, status, role } = filters;
+  
+    const stabilizedThis = inputData.map((el, index) => [el, index]);
+  
+    stabilizedThis.sort((a, b) => {
+      const order = comparator(a[0], b[0]);
+      if (order !== 0) return order;
+      return a[1] - b[1];
+    });
+  
+    inputData = stabilizedThis.map((el) => el[0]);
+  
+    if (name) {
+      inputData = inputData.filter((user) => user.name.toLowerCase().includes(name.toLowerCase()));
+    }
+  
+    if (status !== 'all') {
+      inputData = inputData.filter((user) => user.status === status);
+    }
+  
+    if (role.length) {
+      inputData = inputData.filter((user) => role.includes(user.role));
+    }
+  
+    return inputData;
+  }
+  

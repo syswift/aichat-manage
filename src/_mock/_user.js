@@ -3,10 +3,10 @@ import { _mock } from './_mock';
 // ----------------------------------------------------------------------
 
 export const USER_STATUS_OPTIONS = [
-  { value: 'active', label: 'Active' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'banned', label: 'Banned' },
-  { value: 'rejected', label: 'Rejected' },
+  { value: 'active', label: '启用' },
+  { value: 'pending', label: '审核中' },
+  { value: 'banned', label: '停用' },
+  { value: 'rejected', label: '审核失败' },
 ];
 
 export const _userAbout = {
