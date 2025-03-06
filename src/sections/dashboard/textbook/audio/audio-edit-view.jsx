@@ -35,7 +35,7 @@ export function AudioEditView({ id }) {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Edit"
+        heading="编辑音频"
         backHref={paths.dashboard.textbook.audio.root}
         links={[
           { name: '首页', href: paths.dashboard.root },

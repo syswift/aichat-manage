@@ -1,13 +1,11 @@
 import { CONFIG } from 'src/global-config';
 
-import { BlankView } from 'src/sections/blank/view';
+import { AudioCreateView } from 'src/sections/dashboard/textbook/audio/audio-create-view';
 
 // ----------------------------------------------------------------------
 
-export const metadata = { title: `Dashboard - ${CONFIG.appName}` };
+export const metadata = { title: `新建音频 - ${CONFIG.appName}` };
 
 export default function Page() {
-  return (
-      <BlankView title='new'/>
-  );
+  return <AudioCreateView />;
 }
