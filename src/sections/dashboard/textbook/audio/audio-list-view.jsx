@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
 import { varAlpha } from 'minimal-shared/utils';
+import { useState, useEffect, useCallback } from 'react';
 import { useBoolean, useSetState } from 'minimal-shared/hooks';
 
 import Box from '@mui/material/Box';
@@ -16,8 +16,9 @@ import IconButton from '@mui/material/IconButton';
 
 import { paths } from 'src/routes/paths';
 
+import { supabase } from 'src/lib/supabase';
+import {_roles, USER_STATUS_OPTIONS } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
-import {_roles, _userList, USER_STATUS_OPTIONS } from 'src/_mock';
 
 import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
@@ -34,6 +35,7 @@ import {
     TableEmptyRows,
     TableHeadCustom,
     TableSelectedAction,
+    TablePaginationCustom,
   } from 'src/components/table';
 
   import { AudioTableRow } from './audio-table-row';
@@ -46,20 +48,42 @@ const STATUS_OPTIONS = [{ value: 'all', label: '全部' }, ...USER_STATUS_OPTION
 
 const TABLE_HEAD = [
     { id: 'name', label: '名称' },
-    { id: 'phoneNumber', label: '类型', width: 180 },
+    { id: 'phoneNumber', label: '类型', width: 220 },
     { id: 'company', label: '简介', width: 220 },
-    { id: 'role', label: '操作', width: 180 },
+    { id: 'status', label: '状态', width: 120 },
+    { id: 'role', label: '操作', width: 100 },
   ];
 
+  // 使用 supabase 进行操作
+async function fetchData() {
+    const { data, error } = await supabase
+      .from('audio')
+      .select('*');
+  
+    if (error) {
+      console.error('Error fetching data:', error);
+    } else {
+      console.log('Data:', data);
+    }
+    return data;
+}
+  
 export function AudioListView() {
     const table = useTable();
-
     const confirmDialog = useBoolean();
-
-    const [tableData, setTableData] = useState(_userList);
+    const [tableData, setTableData] = useState([]);
 
     const filters = useSetState({ name: '', role: [], status: 'all' });
     const { state: currentFilters, setState: updateFilters } = filters;
+
+    // Fetch data on component mount
+    useEffect(() => {
+        async function loadData() {
+            const data = await fetchData();
+            setTableData(data);
+        }
+        loadData();
+    }, []);
 
     const dataFiltered = applyFilter({
         inputData: tableData,
@@ -132,6 +156,7 @@ export function AudioListView() {
 
 
     return (
+        <>
         <DashboardContent>
             <CustomBreadcrumbs
             heading="音频"
@@ -270,8 +295,21 @@ export function AudioListView() {
                     </Table>
                     </Scrollbar>
                 </Box>
+
+                <TablePaginationCustom
+                    page={table.page}
+                    dense={table.dense}
+                    count={dataFiltered.length}
+                    rowsPerPage={table.rowsPerPage}
+                    onPageChange={table.onChangePage}
+                    onChangeDense={table.onChangeDense}
+                    onRowsPerPageChange={table.onChangeRowsPerPage}
+                />
             </Card>
         </DashboardContent>
+
+        {renderConfirmDialog()}
+        </>
     );
 }
 
@@ -304,4 +342,3 @@ function applyFilter({ inputData, comparator, filters }) {
   
     return inputData;
   }
-  

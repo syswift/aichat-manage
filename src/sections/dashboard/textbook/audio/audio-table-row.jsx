@@ -15,7 +15,6 @@ import IconButton from '@mui/material/IconButton';
 
 import { RouterLink } from 'src/routes/components';
 
-import { supabase } from 'src/lib/supabase';
 import { USER_STATUS_OPTIONS } from 'src/_mock';
 
 import { Label } from 'src/components/label';
@@ -34,20 +33,6 @@ const getStatusLabel = (statusValue) => {
   const statusOption = STATUS_OPTIONS.find((option) => option.value === statusValue);
   return statusOption ? statusOption.label : statusValue;
 };
-
-// 使用 supabase 进行操作
-async function fetchData() {
-  const { data, error } = await supabase
-    .from('audio')
-    .select('*');
-
-  if (error) {
-    console.error('Error fetching data:', error);
-  } else {
-    console.log('Data:', data);
-  }
-  return data;
-}
 
 export function AudioTableRow({ row, selected, editHref, onSelectRow, onDeleteRow }) {
   const menuActions = usePopover();
@@ -121,7 +106,7 @@ export function AudioTableRow({ row, selected, editHref, onSelectRow, onDeleteRo
 
         <TableCell>
           <Box sx={{ gap: 2, display: 'flex', alignItems: 'center' }}>
-            <Avatar alt={row.name} src={row.avatarUrl} />
+            <Avatar alt={row.name} src={row.cover_url} />
 
             <Stack sx={{ typography: 'body2', flex: '1 1 auto', alignItems: 'flex-start' }}>
               <Link
@@ -133,17 +118,15 @@ export function AudioTableRow({ row, selected, editHref, onSelectRow, onDeleteRo
                 {row.name}
               </Link>
               <Box component="span" sx={{ color: 'text.disabled' }}>
-                {row.email}
+                {row.id}
               </Box>
             </Stack>
           </Box>
         </TableCell>
 
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.phoneNumber}</TableCell>
+        <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.type}</TableCell>
 
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.company}</TableCell>
-
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.role}</TableCell>
+        <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.note}</TableCell>
 
         <TableCell>
           <Label

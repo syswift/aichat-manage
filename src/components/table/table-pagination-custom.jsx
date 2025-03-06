@@ -19,11 +19,12 @@ export function TablePaginationCustom({
         component="div"
         {...other}
         sx={{ borderTopColor: 'transparent' }}
+        labelRowsPerPage="每页行数"
       />
 
       {onChangeDense && (
         <FormControlLabel
-          label="Dense"
+          label="紧凑"
           control={
             <Switch checked={dense} onChange={onChangeDense} inputProps={{ id: 'dense-switch' }} />
           }

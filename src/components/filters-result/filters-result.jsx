@@ -25,7 +25,7 @@ export function FiltersResult({ sx, onReset, children, totalResults, ...other })
           onClick={onReset}
           startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
         >
-          Clear
+          清除
         </Button>
       </ResultContent>
     </ResultRoot>

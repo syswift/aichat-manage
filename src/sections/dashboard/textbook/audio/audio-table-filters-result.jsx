@@ -26,7 +26,7 @@ export function AudioTableFiltersResult({ filters, onResetPage, totalResults, sx
 
   return (
     <FiltersResult totalResults={totalResults} onReset={handleReset} sx={sx}>
-      <FiltersBlock label="Status:" isShow={currentFilters.status !== 'all'}>
+      <FiltersBlock label="状态:" isShow={currentFilters.status !== 'all'}>
         <Chip
           {...chipProps}
           label={currentFilters.status}
