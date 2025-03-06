@@ -48,13 +48,11 @@ export const navData = [
     subheader: 'Overview',
     items: [
       {
-        title: 'One',
+        title: '调试页面',
         path: paths.dashboard.root,
         icon: ICONS.dashboard,
         info: <Label>v{CONFIG.appVersion}</Label>,
       },
-      { title: 'Two', path: paths.dashboard.two, icon: ICONS.ecommerce },
-      { title: 'Three', path: paths.dashboard.three, icon: ICONS.analytics },
     ],
   },
   /**
@@ -65,12 +63,12 @@ export const navData = [
     items: [
       {
         title: '教材管理',
-        path: paths.dashboard.textbook.audio,
+        path: paths.dashboard.textbook.audio.root,
         icon: ICONS.user,
         children: [
-          { title: '音频', path: paths.dashboard.textbook.audio },
-          { title: '视频', path: paths.dashboard.textbook.video },
-          { title: '绘本', path: paths.dashboard.textbook.picbook },
+          { title: '音频', path: paths.dashboard.textbook.audio.root },
+          { title: '视频', path: paths.dashboard.textbook.video.root },
+          { title: '绘本', path: paths.dashboard.textbook.picbook.root },
         ],
       },
     ],

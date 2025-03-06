@@ -4,10 +4,15 @@ import { useState, useCallback } from 'react';
 import { varAlpha } from 'minimal-shared/utils';
 import { useBoolean, useSetState } from 'minimal-shared/hooks';
 
+import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Card from '@mui/material/Card';
+import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
+import Tooltip from '@mui/material/Tooltip';
+import TableBody from '@mui/material/TableBody';
+import IconButton from '@mui/material/IconButton';
 
 import { paths } from 'src/routes/paths';
 
@@ -17,14 +22,21 @@ import {_roles, _userList, USER_STATUS_OPTIONS } from 'src/_mock';
 import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
     useTable,
+    emptyRows,
     rowInPage,
+    TableNoData,
     getComparator,
+    TableEmptyRows,
+    TableHeadCustom,
+    TableSelectedAction,
   } from 'src/components/table';
 
+  import { AudioTableRow } from './audio-table-row';
   import { AudioTableToolbar } from './audio-table-toolbar';
   import { AudioTableFiltersResult } from './audio-table-filters-result';
 
@@ -130,7 +142,7 @@ export function AudioListView() {
             ]}
             action={
                 <Button
-                href={paths.dashboard.root}
+                href={paths.dashboard.textbook.audio.new}
                 variant="contained"
                 startIcon={<Iconify icon="mingcute:add-line" />}
                 >
@@ -193,6 +205,71 @@ export function AudioListView() {
                     sx={{ p: 2.5, pt: 0 }}
                     />
                 )}
+
+                <Box sx={{ position: 'relative' }}>
+                    <TableSelectedAction
+                    dense={table.dense}
+                    numSelected={table.selected.length}
+                    rowCount={dataFiltered.length}
+                    onSelectAllRows={(checked) =>
+                        table.onSelectAllRows(
+                        checked,
+                        dataFiltered.map((row) => row.id)
+                        )
+                    }
+                    action={
+                        <Tooltip title="Delete">
+                        <IconButton color="primary" onClick={confirmDialog.onTrue}>
+                            <Iconify icon="solar:trash-bin-trash-bold" />
+                        </IconButton>
+                        </Tooltip>
+                    }
+                    />
+
+                    <Scrollbar>
+                    <Table size={table.dense ? 'small' : 'medium'} sx={{ minWidth: 960 }}>
+                        <TableHeadCustom
+                        order={table.order}
+                        orderBy={table.orderBy}
+                        headCells={TABLE_HEAD}
+                        rowCount={dataFiltered.length}
+                        numSelected={table.selected.length}
+                        onSort={table.onSort}
+                        onSelectAllRows={(checked) =>
+                            table.onSelectAllRows(
+                            checked,
+                            dataFiltered.map((row) => row.id)
+                            )
+                        }
+                        />
+
+                        <TableBody>
+                        {dataFiltered
+                            .slice(
+                            table.page * table.rowsPerPage,
+                            table.page * table.rowsPerPage + table.rowsPerPage
+                            )
+                            .map((row) => (
+                            <AudioTableRow
+                                key={row.id}
+                                row={row}
+                                selected={table.selected.includes(row.id)}
+                                onSelectRow={() => table.onSelectRow(row.id)}
+                                onDeleteRow={() => handleDeleteRow(row.id)}
+                                editHref={paths.dashboard.textbook.audio.edit(row.id)}
+                            />
+                            ))}
+
+                            <TableEmptyRows
+                                height={table.dense ? 56 : 56 + 20}
+                                emptyRows={emptyRows(table.page, table.rowsPerPage, dataFiltered.length)}
+                            />
+
+                            <TableNoData notFound={notFound} />
+                        </TableBody>
+                    </Table>
+                    </Scrollbar>
+                </Box>
             </Card>
         </DashboardContent>
     );

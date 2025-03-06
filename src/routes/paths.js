@@ -44,12 +44,18 @@ export const paths = {
   // DASHBOARD
   dashboard: {
     root: ROOTS.DASHBOARD,
-    two: `${ROOTS.DASHBOARD}/two`,
-    three: `${ROOTS.DASHBOARD}/three`,
     textbook: {
-      audio: `${ROOTS.DASHBOARD}/textbook/audio`,
-      video: `${ROOTS.DASHBOARD}/textbook/video`,
-      picbook: `${ROOTS.DASHBOARD}/textbook/picbook`,
+      audio: {
+        root: `${ROOTS.DASHBOARD}/textbook/audio`,
+        new: `${ROOTS.DASHBOARD}/textbook/audio/new`,
+        edit: (id) => `${ROOTS.DASHBOARD}/textbook/audio/${id}/edit`,
+      },
+      video:{
+        root: `${ROOTS.DASHBOARD}/textbook/video`,
+      },
+      picbook:{
+        root: `${ROOTS.DASHBOARD}/textbook/picbook`,
+      },
     },
   },
 };
