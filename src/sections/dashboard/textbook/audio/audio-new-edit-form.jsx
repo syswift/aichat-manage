@@ -121,6 +121,7 @@ export function AudioNewEditForm({ currentUser }) {
 
             <Box sx={{ mb: 5 }}>
             <Upload 
+                accept={{ 'audio/*': [] }}
                 maxSize={50 * 1024 * 1024} // 50MB
                 value={file} 
                 onDrop={handleDropSingleFile} 
