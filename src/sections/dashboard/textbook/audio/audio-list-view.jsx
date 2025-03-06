@@ -162,7 +162,7 @@ export function AudioListView() {
             heading="音频"
             links={[
                 { name: '首页', href: paths.dashboard.root },
-                { name: '教材管理', href: paths.dashboard.textbook.audio },
+                { name: '教材管理', href: paths.dashboard.textbook.audio.root },
                 { name: '音频' },
             ]}
             action={
