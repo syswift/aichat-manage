@@ -6,6 +6,8 @@ import { styled, useTheme } from '@mui/material/styles';
 
 import { RouterLink } from 'src/routes/components';
 
+import { CONFIG } from 'src/global-config';
+
 import { logoClasses } from './classes';
 
 // ----------------------------------------------------------------------
@@ -22,13 +24,10 @@ export const Logo = forwardRef((props, ref) => {
   const PRIMARY_MAIN = theme.vars.palette.primary.main;
   const PRIMARY_DARKER = theme.vars.palette.primary.dark;
 
-  /*
-    * OR using local (public folder)
-    *
     const singleLogo = (
       <img
         alt="Single logo"
-        src={`${CONFIG.assetsDir}/logo/logo-single.svg`}
+        src={`${CONFIG.assetsDir}/logo/goose.png`}
         width="100%"
         height="100%"
       />
@@ -37,14 +36,13 @@ export const Logo = forwardRef((props, ref) => {
     const fullLogo = (
       <img
         alt="Full logo"
-        src={`${CONFIG.assetsDir}/logo/logo-full.svg`}
+        src={`${CONFIG.assetsDir}/logo/goose.png`}
         width="100%"
         height="100%"
       />
     );
-    *
-    */
 
+  /*
   const singleLogo = (
     <svg
       width="100%"
@@ -174,7 +172,7 @@ export const Logo = forwardRef((props, ref) => {
       />
     </svg>
   );
-
+*/
   return (
     <LogoRoot
       ref={ref}
