@@ -58,9 +58,11 @@ export function AudioNewEditForm({currentUser}) { // Remove currentUser prop
 
   const handleDropSingleFile = useCallback((acceptedFiles) => {
     const newFile = acceptedFiles[0];
-    setFile(newFile);
-    setValue('file', newFile);
-    console.log('File dropped:', newFile);
+    const sanitizedFileName = newFile.name.replace(/\s+/g, '_');
+    const sanitizedFile = new File([newFile], sanitizedFileName, { type: newFile.type });
+    setFile(sanitizedFile);
+    setValue('file', sanitizedFile);
+    console.log('File dropped:', sanitizedFile);
   }, [setValue]);
 
   const onSubmit = handleSubmit(async (data) => {
@@ -69,7 +71,7 @@ export function AudioNewEditForm({currentUser}) { // Remove currentUser prop
     try {
       setUploading(true);
       // 1. Upload audio file to Supabase Storage
-      const audioFileName = `audio_${Date.now()}_${file.name}`;
+      const audioFileName = `audio_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
       console.log('Uploading audio file:', audioFileName);
       const { error: audioUploadError } = await supabase
         .storage
@@ -94,7 +96,7 @@ export function AudioNewEditForm({currentUser}) { // Remove currentUser prop
       let coverUrl = null;
       if (data.avatarUrl) {
         const coverFile = data.avatarUrl;
-        const coverFileName = `cover_${Date.now()}_${coverFile.name}`;
+        const coverFileName = `cover_${Date.now()}_${coverFile.name.replace(/\s+/g, '_')}`;
         console.log('Uploading cover file:', coverFileName);
         const { error: coverUploadError } = await supabase
           .storage
