@@ -6,11 +6,15 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import { useAuthContext  } from 'src/auth/hooks';
+
 import { AudioNewEditForm } from './audio-new-edit-form';
 
 // ----------------------------------------------------------------------
 
 export function AudioCreateView() {
+
+  const { user } = useAuthContext();
   return (
     <DashboardContent>
       <CustomBreadcrumbs
@@ -25,7 +29,7 @@ export function AudioCreateView() {
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <AudioNewEditForm />
+      <AudioNewEditForm currentUser={user}/>
     </DashboardContent>
   );
 }
