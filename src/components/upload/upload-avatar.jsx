@@ -75,7 +75,7 @@ export function UploadAvatar({ sx, error, value, disabled, helperText, className
     >
       <Iconify icon="solar:camera-add-bold" width={32} />
 
-      <Typography variant="caption">{hasFile ? 'Update photo' : 'Upload photo'}</Typography>
+      <Typography variant="caption">{hasFile ? '上传图片' : '上传图片'}</Typography>
     </Box>
   );
 

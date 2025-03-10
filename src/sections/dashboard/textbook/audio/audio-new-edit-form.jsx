@@ -18,14 +18,14 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
 import { Label } from 'src/components/label';
-import { Upload } from 'src/components/upload';
 import { toast } from 'src/components/snackbar';
+import { Upload, UploadAvatar } from 'src/components/upload';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
 // ----------------------------------------------------------------------
 
 export const NewUserSchema = zod.object({
   avatarUrl: schemaHelper.file({ message: 'Avatar is required!' }),
-  name: zod.string().min(1, { message: 'Name is required!' }),
+  name: zod.string().min(1, { message: '请填写音频名称!' }),
   email: zod
     .string()
     .min(1, { message: 'Email is required!' })
@@ -61,15 +61,7 @@ export function AudioNewEditForm({ currentUser }) {
     avatarUrl: null,
     isVerified: true,
     name: '',
-    email: '',
-    phoneNumber: '',
-    country: '',
-    state: '',
-    city: '',
-    address: '',
-    zipCode: '',
-    company: '',
-    role: '',
+    note: '',
   };
 
   const methods = useForm({
@@ -120,12 +112,25 @@ export function AudioNewEditForm({ currentUser }) {
             )}
 
             <Box sx={{ mb: 5 }}>
+            <Typography 
+                  fontSize="24px"
+                  fontWeight={600}
+                  align="center">
+                  上传音频
+            </Typography>
             <Upload 
-                accept={{ 'audio/*': [] }}
+                accept={{ 'audio/*': [] }} //只接受audio
                 maxSize={50 * 1024 * 1024} // 50MB
                 value={file} 
                 onDrop={handleDropSingleFile} 
-                onDelete={() => setFile(null)} />
+                onDelete={() => setFile(null)} 
+                sx={{
+                  py: 1,
+                  width: 'auto',
+                  height: 'auto',
+                  borderRadius: 1.5,
+                }}
+            />
             </Box>
 
             {currentUser && (
@@ -185,32 +190,28 @@ export function AudioNewEditForm({ currentUser }) {
                 gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
               }}
             >
-              <Field.Text name="name" label="Full name" />
-              <Field.Text name="email" label="Email address" />
-              <Field.Phone
-                name="phoneNumber"
-                label="Phone number"
-                country={!currentUser ? 'DE' : undefined}
-              />
-
-              <Field.CountrySelect
-                fullWidth
-                name="country"
-                label="Country"
-                placeholder="Choose a country"
-              />
-
-              <Field.Text name="state" label="State/region" />
-              <Field.Text name="city" label="City" />
-              <Field.Text name="address" label="Address" />
-              <Field.Text name="zipCode" label="Zip/code" />
-              <Field.Text name="company" label="Company" />
-              <Field.Text name="role" label="Role" />
+              <Field.Text name="name" label="音频名称" />
+              <Field.Text name="note" label="备注" />
+              <Box>
+                <Typography 
+                  fontSize="24px"
+                  lineHeight={4}
+                  fontWeight={600}
+                  align="center">
+                  上传封面
+                </Typography>
+                <UploadAvatar
+                  name="avatarUrl"
+                />
+                
+              </Box>
+              
             </Box>
-
+              
+          
             <Stack sx={{ mt: 3, alignItems: 'flex-end' }}>
               <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-                {!currentUser ? 'Create user' : 'Save changes'}
+                {!currentUser ? '创建并上传音频' : 'Save changes'}
               </LoadingButton>
             </Stack>
           </Card>
