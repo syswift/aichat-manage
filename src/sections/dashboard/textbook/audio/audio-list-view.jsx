@@ -21,10 +21,8 @@ import {_roles, USER_STATUS_OPTIONS } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
-import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { ConfirmDialog } from 'src/components/custom-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
   import {
     useTable,
@@ -98,28 +96,43 @@ export function AudioListView() {
 
     const notFound = (!dataFiltered.length && canReset) || !dataFiltered.length;
 
-    const handleDeleteRow = useCallback(
-        (id) => {
+    const handleDeleteRow = useCallback(async (id) => {
         const deleteRow = tableData.filter((row) => row.id !== id);
-
-        toast.success('Delete success!');
-
+    
+        // Delete audio and cover files from Supabase storage
+        const targetRow = tableData.find((row) => row.id === id);
+        if (targetRow) {
+            const audioFileName = targetRow.file_url.replace('https://reecurbemkhjmectdkyp.supabase.co/storage/v1/object/public/audio/', '');
+            const coverFileName = targetRow.cover_url.replace('https://reecurbemkhjmectdkyp.supabase.co/storage/v1/object/public/audio_cover/', '');
+    
+            const { data: audioData, error: audioError } = await supabase.storage.from('audio').remove([audioFileName]);
+            if (audioError) {
+                console.error('Error deleting audio file:', audioError);
+            } else {
+                console.log('Audio file delete response:', audioData);
+            }
+    
+            const { data: coverData, error: coverError } = await supabase.storage.from('audio_cover').remove([coverFileName]);
+            if (coverError) {
+                console.error('Error deleting cover file:', coverError);
+            } else {
+                console.log('Cover file delete response:', coverData);
+            }
+    
+            const { data: dbData, error: dbError } = await supabase.from('audio').delete().eq('id', targetRow.id);
+            if (dbError) {
+                console.error('Error deleting database entry:', dbError);
+            } else {
+                console.log('Database delete response:', dbData);
+            }
+        }
+    
+        console.log('Delete success!');
+    
         setTableData(deleteRow);
-
+    
         table.onUpdatePageDeleteRow(dataInPage.length);
-        },
-        [dataInPage.length, table, tableData]
-    );
-
-    const handleDeleteRows = useCallback(() => {
-        const deleteRows = tableData.filter((row) => !table.selected.includes(row.id));
-
-        toast.success('Delete success!');
-
-        setTableData(deleteRows);
-
-        table.onUpdatePageDeleteRows(dataInPage.length, dataFiltered.length);
-    }, [dataFiltered.length, dataInPage.length, table, tableData]);
+    }, [dataInPage.length, table, tableData]);
 
     const handleFilterStatus = useCallback(
         (event, newValue) => {
@@ -129,34 +142,8 @@ export function AudioListView() {
         [updateFilters, table]
     );
 
-    const renderConfirmDialog = () => (
-        <ConfirmDialog
-        open={confirmDialog.value}
-        onClose={confirmDialog.onFalse}
-        title="Delete"
-        content={
-            <>
-            Are you sure want to delete <strong> {table.selected.length} </strong> items?
-            </>
-        }
-        action={
-            <Button
-            variant="contained"
-            color="error"
-            onClick={() => {
-                handleDeleteRows();
-                confirmDialog.onFalse();
-            }}
-            >
-            Delete
-            </Button>
-        }
-        />
-    );
-
 
     return (
-        <>
         <DashboardContent>
             <CustomBreadcrumbs
             heading="音频"
@@ -307,9 +294,6 @@ export function AudioListView() {
                 />
             </Card>
         </DashboardContent>
-
-        {renderConfirmDialog()}
-        </>
     );
 }
 
