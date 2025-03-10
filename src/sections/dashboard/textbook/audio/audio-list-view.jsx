@@ -105,6 +105,9 @@ export function AudioListView() {
             const audioFileName = targetRow.file_url.replace('https://reecurbemkhjmectdkyp.supabase.co/storage/v1/object/public/audio/', '');
             const coverFileName = targetRow.cover_url.replace('https://reecurbemkhjmectdkyp.supabase.co/storage/v1/object/public/audio_cover/', '');
     
+            console.log('Deleting audio file:', audioFileName);
+            console.log('Deleting cover file:', coverFileName);
+            
             const { data: audioData, error: audioError } = await supabase.storage.from('audio').remove([audioFileName]);
             if (audioError) {
                 console.error('Error deleting audio file:', audioError);
