@@ -39,6 +39,11 @@ export function AudioTableRow({ row, selected, editHref, onSelectRow, onDeleteRo
   const confirmDialog = useBoolean();
   const quickEditForm = useBoolean();
 
+  const handleDeleteRow = async () => {
+    confirmDialog.onFalse();
+    await onDeleteRow();
+  };
+
   const renderQuickEditForm = () => (
     <AudioQuickEditForm
       currentUser={row}
@@ -83,7 +88,7 @@ export function AudioTableRow({ row, selected, editHref, onSelectRow, onDeleteRo
       title="删除"
       content="你确认要删除这个音频吗?"
       action={
-        <Button variant="contained" color="error" onClick={onDeleteRow}>
+        <Button variant="contained" color="error" onClick={handleDeleteRow}>
           删除
         </Button>
       }

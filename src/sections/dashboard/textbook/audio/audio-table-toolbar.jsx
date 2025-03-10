@@ -8,12 +8,16 @@ import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 
+import { paths } from 'src/routes/paths';
+import { useRouter } from 'src/routes/hooks';
+
 import { Iconify } from 'src/components/iconify';
 import { CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
 export function AudioTableToolbar({ filters, options, onResetPage }) {
+  const router = useRouter();
   const menuActions = usePopover();
 
   const { state: currentFilters, setState: updateFilters } = filters;
@@ -35,14 +39,14 @@ export function AudioTableToolbar({ filters, options, onResetPage }) {
     >
       <MenuList>
 
-        <MenuItem onClick={() => menuActions.onClose()}>
+        <MenuItem onClick={() => router.push(paths.dashboard.textbook.audio.new)}>
           <Iconify icon="solar:import-bold" />
           导入
         </MenuItem>
 
         <MenuItem onClick={() => menuActions.onClose()}>
           <Iconify icon="solar:export-bold" />
-          导出
+          导出CSV
         </MenuItem>
       </MenuList>
     </CustomPopover>
