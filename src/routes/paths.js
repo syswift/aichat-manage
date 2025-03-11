@@ -50,11 +50,15 @@ export const paths = {
         new: `${ROOTS.DASHBOARD}/textbook/audio/new`,
         edit: (id) => `${ROOTS.DASHBOARD}/textbook/audio/${id}/edit`,
       },
-      video:{
+      video: {
         root: `${ROOTS.DASHBOARD}/textbook/video`,
+        new: `${ROOTS.DASHBOARD}/textbook/video/new`,
+        edit: (id) => `${ROOTS.DASHBOARD}/textbook/video/${id}/edit`,
       },
-      picbook:{
+      picbook: {
         root: `${ROOTS.DASHBOARD}/textbook/picbook`,
+        new: `${ROOTS.DASHBOARD}/textbook/picbook/new`,
+        edit: (id) => `${ROOTS.DASHBOARD}/textbook/picbook/${id}/edit`,
       },
     },
   },

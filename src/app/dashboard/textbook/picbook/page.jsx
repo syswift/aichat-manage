@@ -1,11 +1,10 @@
 import { CONFIG } from 'src/global-config';
-
-import { BlankView } from 'src/sections/blank/view';
+import { PicbookListView } from 'src/sections/dashboard/textbook/picbook';
 
 // ----------------------------------------------------------------------
 
-export const metadata = { title: `Page picbook | Dashboard - ${CONFIG.appName}` };
+export const metadata = { title: `绘本管理 | Dashboard - ${CONFIG.appName}` };
 
 export default function Page() {
-  return <BlankView title="Page picbook" />;
+  return <PicbookListView />;
 }
