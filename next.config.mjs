@@ -1,3 +1,4 @@
+import { withNextVideo } from "next-video/process";
 const isStaticExport = 'false';
 
 const nextConfig = {
@@ -29,4 +30,4 @@ const nextConfig = {
   }),
 };
 
-export default nextConfig;
+export default withNextVideo(nextConfig);

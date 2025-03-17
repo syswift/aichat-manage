@@ -9,7 +9,8 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { VideoNewEditForm } from './video-new-edit-form';
+
+import { VideoEditForm } from './video-edit-form';
 
 // ----------------------------------------------------------------------
 
@@ -46,7 +47,7 @@ export function VideoEditView({ id }) {
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <VideoNewEditForm currentVideo={currentVideo} />
+      <VideoEditForm currentVideo={currentVideo} />
     </DashboardContent>
   );
 } 
