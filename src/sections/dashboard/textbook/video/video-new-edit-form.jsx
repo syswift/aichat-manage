@@ -43,45 +43,70 @@ export function VideoNewEditForm({ currentVideo }) {
     defaultValues: {
       name: currentVideo?.name || '',
       note: currentVideo?.note || '',
+      avatarUrl: currentVideo?.cover_url || null,
       status: currentVideo?.status || 'active',
       isVerified: currentVideo?.isVerified || true,
     },
   });
 
-  const { reset } = methods;
+  const { reset,setValue } = methods;
 
   const handleDropSingleFile = useCallback((acceptedFiles) => {
     const newFile = acceptedFiles[0];
-    if (newFile) {
-      setFile(newFile);
-    }
-  }, []);
+    const sanitizedFileName = newFile.name.replace(/\s+/g, '_');
+    const sanitizedFile = new File([newFile], sanitizedFileName, { type: newFile.type });
+    setFile(sanitizedFile);
+    setValue('file', sanitizedFile);
+    console.log('File dropped:', sanitizedFile);
+  }, [setValue]);
 
   const onSubmit = methods.handleSubmit(async (data) => {
     setUploading(true);
     setIsSubmitting(true);
     try {
       let videoUrl = '';
-      let coverUrl = '';
+      const videoFileName = `video_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+      console.log('Uploading video file:', videoFileName);
 
       if (file) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-          .from('videos')
-          .upload(filePath, file);
+          .from('video')
+          .upload(videoFileName, file);
 
         if (uploadError) {
           throw uploadError;
         }
 
         const { data: { publicUrl } } = supabase.storage
-          .from('videos')
-          .getPublicUrl(filePath);
+          .from('video')
+          .getPublicUrl(videoFileName);
 
         videoUrl = publicUrl;
+      }
+
+      // 2. Upload cover image if exists
+      let coverUrl = null;
+      if (data.avatarUrl) {
+          const coverFile = data.avatarUrl;
+          const coverFileName = `cover_${Date.now()}_${coverFile.name.replace(/\s+/g, '_')}`;
+          console.log('Uploading cover file:', coverFileName);
+          const { error: coverUploadError } = await supabase
+            .storage
+            .from('video_cover')
+            .upload(coverFileName, coverFile);
+              
+          if (coverUploadError) {
+            console.log('封面上传失败，但视频已上传成功!', coverUploadError);
+          } else {
+            const { data: coverUrlData } = supabase
+              .storage
+              .from('video_cover')
+              .getPublicUrl(coverFileName);
+                
+            coverUrl = coverUrlData.publicUrl;
+            console.log('Cover URL:', coverUrl);
+          }
       }
 
       const { error: insertError } = await supabase
@@ -91,7 +116,7 @@ export function VideoNewEditForm({ currentVideo }) {
             id: Date.now(),
             name: data.name,
             note: data.note || '',
-            file_url: videoUrl,
+            video_url: videoUrl,
             cover_url: coverUrl,
           }
         ]);

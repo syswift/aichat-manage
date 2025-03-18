@@ -3,23 +3,31 @@
 import { z as zod } from 'zod';
 import Video from 'next-video';
 import { useForm } from 'react-hook-form';
-import { useState, useCallback } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-// eslint-disable-next-line import/no-unresolved
-import demovideo from 'https://reecurbemkhjmectdkyp.supabase.co/storage/v1/object/public/video//file_example_MP4_1920_18MG.mp4'
+import { useRef , useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import { List } from '@mui/material';
 import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid2';
+import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
+import Select from '@mui/material/Select';
+import Button from '@mui/material/Button';
+import Snackbar from '@mui/material/Snackbar';
+import MenuItem from '@mui/material/MenuItem';
 import Collapse from '@mui/material/Collapse';
+import InputLabel from '@mui/material/InputLabel';
 import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
 import LoadingButton from '@mui/lab/LoadingButton';
+import FormControl from '@mui/material/FormControl';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import ListSubheader from '@mui/material/ListSubheader';
 import ListItemButton from '@mui/material/ListItemButton';
+
+import { supabase } from 'src/lib/supabase';
 
 import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
@@ -39,6 +47,80 @@ export function VideoEditForm({ currentVideo }) {
     const [quizOpen, setquizOpen] = useState(false);
     const [picbookOpen, setpicbookOpen] = useState(false);
     const [audioOpen, setaudioOpen] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const videoRef = useRef(null);
+    const [audioItems, setAudioItems] = useState([]);
+    const [audioOptions, setAudioOptions] = useState([]);
+    const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
+
+    // currentTime: Current playback position in seconds
+    // duration: Total video duration in seconds
+    // Progress percentage: (currentTime / duration) * 100
+
+    const fetchAudioOptions = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('audio')
+            .select('id, name, file_url');
+          
+          if (error) {
+            console.error('Error fetching audio options:', error);
+            return;
+          }
+          
+          setAudioOptions(data || []);
+        } catch (error) {
+          console.error('Failed to fetch audio options:', error.message);
+        }
+    };
+
+    useEffect(() => {
+        fetchAudioOptions();
+    }, []);
+
+    const handleAudioSelection = (id, audioId) => {
+        setAudioItems(audioItems.map(item => 
+          item.id === id ? { 
+            ...item, 
+            audioId,
+            // Find the selected audio name from options
+            name: audioOptions.find(audio => audio.id === audioId)?.name || item.name
+          } : item
+        ));
+    };
+
+    const handleAddAudioItem = () => {
+        const currentTimestamp = Math.floor(currentTime);
+        
+        // Check if this timestamp already exists in any audio item
+        const timestampExists = audioItems.some(item => Math.floor(item.timestamp) === currentTimestamp);
+        
+        if (timestampExists) {
+            setNotification({
+            open: true,
+            message: `时间戳 ${Math.floor(currentTimestamp / 60)}:${(currentTimestamp % 60).toString().padStart(2, '0')} 已存在！`,
+            severity: 'warning'
+            });
+            return; // Don't add a duplicate timestamp
+        }
+        
+        setAudioItems([...audioItems, { 
+            id: `audio-${Date.now()}`, 
+            name: `音频 ${audioItems.length + 1}`,
+            timestamp: currentTimestamp,
+            audioId: ''
+        }]);
+    };
+    
+    // Add a function to close the notification
+    const handleCloseNotification = () => {
+        setNotification({ ...notification, open: false });
+    };
+
+    const handleRemoveAudioItem = (id) => {
+        setAudioItems(audioItems.filter(item => item.id !== id));
+    };
 
     const handleQuizClick = useCallback(() => {
         setquizOpen((prev) => !prev);
@@ -51,6 +133,21 @@ export function VideoEditForm({ currentVideo }) {
     const handleAudioClick = useCallback(() => {
         setaudioOpen((prev) => !prev);
     }, []);
+
+    const handleTimeUpdate = (event) => {
+    setCurrentTime(event.target.currentTime);
+    };
+
+    const handleLoadedMetadata = (event) => {
+    setDuration(event.target.duration);
+    };
+    
+    // To manually seek to a specific time:
+    const seekToTime = (timeInSeconds) => {
+        if (videoRef.current) {
+        videoRef.current.currentTime = timeInSeconds;
+        }
+    };
 
     const defaultValues = {
         name: currentVideo?.name || '',
@@ -67,7 +164,6 @@ export function VideoEditForm({ currentVideo }) {
     });
 
     const {
-        reset,
         handleSubmit,
         formState: { isSubmitting },
         setValue,
@@ -93,7 +189,12 @@ export function VideoEditForm({ currentVideo }) {
                 <Field.Text name="name" label="视频名称" required />
                 <Field.Text name="note" label="备注" />        
 
-                <Video src={demovideo}/>
+                <Video 
+                    ref={videoRef}
+                    src={currentVideo?.video_url}
+                    //poster={currentVideo?.cover_url || "asset/goose.png"}
+                    onTimeUpdate={handleTimeUpdate}
+                    onLoadedMetadata={handleLoadedMetadata}/>
                 <Box>
                     <Typography 
                     fontSize="24px"
@@ -130,12 +231,46 @@ export function VideoEditForm({ currentVideo }) {
 
                     <Collapse in={audioOpen} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
-                            <ListItemButton sx={{ pl: 4 }}>
+                            {audioItems.map((item) => (
+                            <ListItemButton key={item.id} sx={{ pl: 4, pr: 1, display: 'flex', alignItems: 'center' }}>
                                 <ListItemIcon>
-                                    <Iconify icon="ic:round-star-border" width={24} />
+                                <Iconify icon="mdi:music-note" width={20} />
                                 </ListItemIcon>
-                                <ListItemText primary="Starred" />
+                                <FormControl fullWidth size="small" sx={{ mr: 2 }}>
+                                <InputLabel id={`audio-select-${item.id}-label`}>选择音频</InputLabel>
+                                <Select
+                                    labelId={`audio-select-${item.id}-label`}
+                                    id={`audio-select-${item.id}`}
+                                    value={item.audioId || ''}
+                                    label="选择音频"
+                                    onChange={(e) => handleAudioSelection(item.id, e.target.value)}
+                                >
+                                    {audioOptions.map((audio) => (
+                                    <MenuItem key={audio.id} value={audio.id}>
+                                        {audio.name}
+                                    </MenuItem>
+                                    ))}
+                                </Select>
+                                </FormControl>
+                                <Typography variant="body2" color="text.secondary" sx={{ minWidth: 80 }}>
+                                {`${Math.floor(item.timestamp / 60)}:${(item.timestamp % 60).toString().padStart(2, '0')}`}
+                                </Typography>
+                                <IconButton edge="end" onClick={() => handleRemoveAudioItem(item.id)}>
+                                <Iconify icon="eva:trash-2-outline" width={20} />
+                                </IconButton>
                             </ListItemButton>
+                            ))}
+                            
+                            <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+                            <Button 
+                                startIcon={<Iconify icon="eva:plus-fill" />}
+                                onClick={handleAddAudioItem}
+                                variant="outlined"
+                                size="small"
+                            >
+                                添加音频
+                            </Button>
+                            </Box>
                         </List>
                     </Collapse>
 
@@ -189,6 +324,16 @@ export function VideoEditForm({ currentVideo }) {
           </Card>
         </Grid>
       </Grid>
+      <Snackbar 
+        open={notification.open}
+        autoHideDuration={4000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+        <Alert onClose={handleCloseNotification} severity={notification.severity}>
+            {notification.message}
+        </Alert>
+       </Snackbar>
     </Form>
     );
 }
