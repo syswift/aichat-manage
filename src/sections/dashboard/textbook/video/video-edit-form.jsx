@@ -38,6 +38,7 @@ export const VideoSchema = zod.object({
   note: zod.string().optional(),
   avatarUrl: zod.any().optional(),
   status: zod.string().default('active'),
+  updated_at: zod.string().optional(),
   isVerified: zod.boolean().default(true),
 });
 // ----------------------------------------------------------------------
@@ -48,7 +49,7 @@ export function VideoEditForm({ currentVideo }) {
     const [picbookOpen, setpicbookOpen] = useState(false);
     const [audioOpen, setaudioOpen] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
-    const [duration, setDuration] = useState(0);
+    //const [duration, setDuration] = useState(0);
     const videoRef = useRef(null);
     const [audioItems, setAudioItems] = useState([]);
     const [audioOptions, setAudioOptions] = useState([]);
@@ -58,7 +59,45 @@ export function VideoEditForm({ currentVideo }) {
     // duration: Total video duration in seconds
     // Progress percentage: (currentTime / duration) * 100
 
-    const fetchAudioOptions = async () => {
+    const fetchExistingAudioItems = useCallback(async () => {
+        try {
+          if (!currentVideo?.id) return;
+          
+          const { data, error } = await supabase
+            .from('video_audio_links')
+            .select(`
+              id,
+              timestamp,
+              audio_id,
+              audio:audio_id (
+                id,
+                name
+              )
+            `)
+            .eq('video_id', currentVideo.id);
+          
+          if (error) {
+            console.error('Error fetching audio links:', error);
+            return;
+          }
+          
+          if (data && data.length > 0) {
+            // Transform data into the format expected by audioItems
+            const formattedItems = data.map(link => ({
+              id: `audio-${link.id}`,
+              name: link.audio?.name || `音频 ${link.id}`,
+              timestamp: link.timestamp,
+              audioId: link.audio_id
+            }));
+            
+            setAudioItems(formattedItems);
+          }
+        } catch (error) {
+          console.error('Failed to fetch audio links:', error.message);
+        }
+    }, [currentVideo]);
+
+    const fetchAudioOptions = useCallback(async () => {
         try {
           const { data, error } = await supabase
             .from('audio')
@@ -73,11 +112,12 @@ export function VideoEditForm({ currentVideo }) {
         } catch (error) {
           console.error('Failed to fetch audio options:', error.message);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchAudioOptions();
-    }, []);
+        fetchExistingAudioItems();
+    }, [fetchAudioOptions, fetchExistingAudioItems]);
 
     const handleAudioSelection = (id, audioId) => {
         setAudioItems(audioItems.map(item => 
@@ -137,17 +177,17 @@ export function VideoEditForm({ currentVideo }) {
     const handleTimeUpdate = (event) => {
     setCurrentTime(event.target.currentTime);
     };
-
+/*
     const handleLoadedMetadata = (event) => {
     setDuration(event.target.duration);
     };
-    
+*/    
     // To manually seek to a specific time:
-    const seekToTime = (timeInSeconds) => {
-        if (videoRef.current) {
-        videoRef.current.currentTime = timeInSeconds;
-        }
-    };
+    //const seekToTime = (timeInSeconds) => {
+    //    if (videoRef.current) {
+    //    videoRef.current.currentTime = timeInSeconds;
+    //    }
+    //};
 
     const defaultValues = {
         name: currentVideo?.name || '',
@@ -166,11 +206,80 @@ export function VideoEditForm({ currentVideo }) {
     const {
         handleSubmit,
         formState: { isSubmitting },
-        setValue,
     } = methods;
 
     const onSubmit = handleSubmit(async (data) => {
-    });  
+        try {
+          setUploading(true);
+          
+          // 1. Update the video information
+          const { error: videoUpdateError } = await supabase
+            .from('video') // Adjust table name if different
+            .update({
+              name: data.name,
+              note: data.note,
+              cover_url: data.avatarUrl,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', currentVideo.id);
+            
+          if (videoUpdateError) {
+            throw new Error(`更新视频信息失败: ${videoUpdateError.message}`);
+          }
+          
+          // 2. Handle audio items - first delete existing associations
+          const { error: deleteError } = await supabase
+            .from('video_audio_links') // Adjust table name if different
+            .delete()
+            .eq('video_id', currentVideo.id);
+            
+          if (deleteError) {
+            throw new Error(`删除原有音频关联失败: ${deleteError.message}`);
+          }
+          
+          // 3. Insert new audio associations
+          if (audioItems.length > 0) {
+            const audioLinks = audioItems
+              .filter(item => item.audioId) // Only include items with selected audio
+              .map(item => ({
+                type: 'audio',
+                video_id: currentVideo.id,
+                audio_id: item.audioId,
+                timestamp: item.timestamp,
+                created_at: new Date().toISOString()
+              }));
+              
+            if (audioLinks.length > 0) {
+              const { error: insertError } = await supabase
+                .from('video_audio_links')
+                .insert(audioLinks);
+                
+              if (insertError) {
+                throw new Error(`添加新音频关联失败: ${insertError.message}`);
+              }
+            }
+          }
+          
+          // Show success notification
+          setNotification({
+            open: true,
+            message: '视频已成功更新！',
+            severity: 'success'
+          });
+          
+        } catch (error) {
+          console.error('Error updating video:', error);
+          
+          // Show error notification
+          setNotification({
+            open: true,
+            message: `更新失败: ${error.message}`,
+            severity: 'error'
+          });
+        } finally {
+          setUploading(false);
+        }
+    });
 
     return (
     <Form methods={methods} onSubmit={onSubmit}>
@@ -194,7 +303,8 @@ export function VideoEditForm({ currentVideo }) {
                     src={currentVideo?.video_url}
                     //poster={currentVideo?.cover_url || "asset/goose.png"}
                     onTimeUpdate={handleTimeUpdate}
-                    onLoadedMetadata={handleLoadedMetadata}/>
+                    //onLoadedMetadata={handleLoadedMetadata}
+                />
                 <Box>
                     <Typography 
                     fontSize="24px"
