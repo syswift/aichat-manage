@@ -17,6 +17,7 @@ import { SeoIllustration } from 'src/assets/illustrations';
 
 import { Iconify } from 'src/components/iconify';
 import { Chart, useChart } from 'src/components/chart';
+import { LoadingScreen } from 'src/components/loading-screen';
 
 // ----------------------------------------------------------------------
 
@@ -31,7 +32,6 @@ export function StatsDashboard() {
     video: [],
     picbook: [],
   });
-  // eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(true);
   
   const theme = useTheme();
@@ -302,6 +302,10 @@ export function StatsDashboard() {
       }
     }
   });
+
+  if (loading) {
+    return <LoadingScreen />; 
+  }
 
   return (
     <DashboardContent maxWidth="1800px">

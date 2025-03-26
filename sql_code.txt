@@ -1,0 +1,23 @@
+CREATE TABLE hotspots (
+    id SERIAL PRIMARY KEY,
+    picbook_id INTEGER NOT NULL REFERENCES picbook(id) ON DELETE CASCADE,
+    page_index INTEGER NOT NULL,
+    x DECIMAL(5,2) NOT NULL,  -- x coordinate as percentage (0-100)
+    y DECIMAL(5,2) NOT NULL,  -- y coordinate as percentage (0-100)
+    type VARCHAR(10) NOT NULL CHECK (type IN ('text', 'audio', 'video')),
+    content TEXT,             -- for text hotspots
+    audio_id INTEGER REFERENCES audio(id) ON DELETE SET NULL,
+    video_id INTEGER REFERENCES video(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Ensure only one field is populated based on type
+    CONSTRAINT validate_content_type CHECK (
+        (type = 'text' AND content IS NOT NULL AND audio_id IS NULL AND video_id IS NULL) OR
+        (type = 'audio' AND content IS NULL AND audio_id IS NOT NULL AND video_id IS NULL) OR
+        (type = 'video' AND content IS NULL AND audio_id IS NULL AND video_id IS NOT NULL)
+    )
+);
+
+-- Index for faster queries when retrieving hotspots for a specific page
+CREATE INDEX idx_hotspots_picbook_page ON hotspots(picbook_id, page_index);

@@ -17,7 +17,10 @@ import { useRouter } from 'src/routes/hooks';
 
 import { supabase } from 'src/lib/supabase';
 
+import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
+
+import { PicbookEditPopup } from './picbook-edit-popup';
 
 // ----------------------------------------------------------------------
 
@@ -35,6 +38,7 @@ export function PicbookNewEditForm({ currentPicbook }) {
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [popupOpen, setPopupOpen] = useState(false);
 
   const methods = useForm({
     resolver: zodResolver(PicbookSchema),
@@ -137,6 +141,14 @@ export function PicbookNewEditForm({ currentPicbook }) {
     }
   });
 
+  const handleOpenPopup = () => {
+    setPopupOpen(true);
+  };
+
+  const handleClosePopup = () => {
+    setPopupOpen(false);
+  };
+
   return (
     <Form methods={methods} onSubmit={onSubmit}>
       <Grid container spacing={3}>
@@ -152,15 +164,80 @@ export function PicbookNewEditForm({ currentPicbook }) {
             >
               <Field.Text name="name" label="绘本名称" required />
               <Field.Text name="note" label="备注" />
-              <Box sx={{ mb: 5 }}>
-                <Typography 
-                  name="upload"
-                  fontSize="24px"
-                  fontWeight={600}
-                  align="center">
-                  详细编辑绘本
-                </Typography>
+              <Box sx={{ mb: 5, mt: 3, display: 'flex', justifyContent: 'center' }}>
+                <Box
+                  onClick={handleOpenPopup}
+                  sx={{ 
+                    minHeight: '180px',
+                    minWidth: '140px',
+                    maxHeight: '350px',
+                    maxWidth: '280px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    borderRadius: 2,
+                    boxShadow: 3,
+                    position: 'relative',
+                    overflow: 'hidden',
+                    bgcolor: '#f5f5f5', // Light background for when image is loading or missing
+                    '&:hover': {
+                      boxShadow: 6,
+                      '& .overlay': {
+                        opacity: 1,
+                      }
+                    }
+                  }}
+                >
+                  {currentPicbook?.cover_url ? (
+                    <Box
+                      component="img"
+                      src={currentPicbook.cover_url}
+                      alt="绘本封面"
+                      sx={{
+                        width: '100%',
+                        height: 'auto',
+                        objectFit: 'contain',
+                        maxHeight: '350px',
+                      }}
+                    />
+                  ) : (
+                    <Iconify 
+                      icon="ph:book-open-duotone" 
+                      width={80} 
+                      height={80} 
+                      sx={{ opacity: 0.6 }}
+                    />
+                  )}
+                  
+                  {/* Overlay with text that appears on hover */}
+                  <Box
+                    className="overlay"
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      bgcolor: 'rgba(0, 0, 0, 0.5)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: 0,
+                      transition: 'opacity 0.3s',
+                    }}
+                  >
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Iconify icon="eva:edit-fill" sx={{ color: 'white' }} />
+                      <Typography color="white" fontWeight={500}>
+                        详细编辑绘本
+                      </Typography>
+                    </Stack>
+                  </Box>
+                </Box>
               </Box>
+
               <Box>
                 <Typography 
                   fontSize="24px"
@@ -183,6 +260,14 @@ export function PicbookNewEditForm({ currentPicbook }) {
           </Card>
         </Grid>
       </Grid>
+      
+      <PicbookEditPopup 
+        open={popupOpen} 
+        onClose={handleClosePopup} 
+        picsUrlList={currentPicbook?.pics_url_list} 
+        folderName={currentPicbook?.folder_name}
+        picbookId={currentPicbook?.id}
+      />
     </Form>
   );
 }
