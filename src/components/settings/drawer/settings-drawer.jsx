@@ -65,12 +65,12 @@ export function SettingsDrawer({ sx, defaultSettings }) {
       }}
     >
       <Typography variant="h6" sx={{ flexGrow: 1 }}>
-        Settings
+        外观设置
       </Typography>
 
       <FullScreenButton />
 
-      <Tooltip title="Reset all">
+      <Tooltip title="重置全部">
         <IconButton onClick={handleReset}>
           <Badge color="error" variant="dot" invisible={!settings.canReset}>
             <Iconify icon="solar:restart-bold" />
@@ -78,7 +78,7 @@ export function SettingsDrawer({ sx, defaultSettings }) {
         </IconButton>
       </Tooltip>
 
-      <Tooltip title="Close">
+      <Tooltip title="关闭">
         <IconButton onClick={settings.onCloseDrawer}>
           <Iconify icon="mingcute:close-line" />
         </IconButton>
@@ -88,7 +88,7 @@ export function SettingsDrawer({ sx, defaultSettings }) {
 
   const renderMode = () => (
     <BaseOption
-      label="Dark mode"
+      label="深色模式"
       icon="moon"
       selected={settings.state.colorScheme === 'dark'}
       onChangeOption={() => {
@@ -100,7 +100,7 @@ export function SettingsDrawer({ sx, defaultSettings }) {
 
   const renderContrast = () => (
     <BaseOption
-      label="Contrast"
+      label="对比度"
       icon="contrast"
       selected={settings.state.contrast === 'hight'}
       onChangeOption={() =>
@@ -113,7 +113,7 @@ export function SettingsDrawer({ sx, defaultSettings }) {
 
   const renderRtl = () => (
     <BaseOption
-      label="Right to left"
+      label="从右到左"
       icon="align-right"
       selected={settings.state.direction === 'rtl'}
       onChangeOption={() =>
@@ -126,8 +126,8 @@ export function SettingsDrawer({ sx, defaultSettings }) {
 
   const renderCompact = () => (
     <BaseOption
-      tooltip="Dashboard only and available at large resolutions > 1600px (xl)"
-      label="Compact"
+      tooltip="仅适用于仪表盘，在大于1600px(xl)的大分辨率下可用"
+      label="紧凑模式"
       icon="autofit-width"
       selected={!!settings.state.compactLayout}
       onChangeOption={() => settings.setState({ compactLayout: !settings.state.compactLayout })}
@@ -136,7 +136,7 @@ export function SettingsDrawer({ sx, defaultSettings }) {
 
   const renderPresets = () => (
     <LargeBlock
-      title="Presets"
+      title="预设"
       canReset={settings.state.primaryColor !== defaultSettings.primaryColor}
       onReset={() => settings.setState({ primaryColor: defaultSettings.primaryColor })}
     >
@@ -152,10 +152,10 @@ export function SettingsDrawer({ sx, defaultSettings }) {
   );
 
   const renderNav = () => (
-    <LargeBlock title="Nav" tooltip="Dashboard only" sx={{ gap: 2.5 }}>
+    <LargeBlock title="导航" tooltip="仅适用于仪表盘" sx={{ gap: 2.5 }}>
       {isNavLayoutVisible && (
         <SmallBlock
-          label="Layout"
+          label="布局"
           canReset={settings.state.navLayout !== defaultSettings.navLayout}
           onReset={() => settings.setState({ navLayout: defaultSettings.navLayout })}
         >
@@ -168,7 +168,7 @@ export function SettingsDrawer({ sx, defaultSettings }) {
       )}
       {isNavColorVisible && (
         <SmallBlock
-          label="Color"
+          label="颜色"
           canReset={settings.state.navColor !== defaultSettings.navColor}
           onReset={() => settings.setState({ navColor: defaultSettings.navColor })}
         >
@@ -183,10 +183,10 @@ export function SettingsDrawer({ sx, defaultSettings }) {
   );
 
   const renderFont = () => (
-    <LargeBlock title="Font" sx={{ gap: 2.5 }}>
+    <LargeBlock title="字体" sx={{ gap: 2.5 }}>
       {isFontFamilyVisible && (
         <SmallBlock
-          label="Family"
+          label="字体族"
           canReset={settings.state.fontFamily !== defaultSettings.fontFamily}
           onReset={() => settings.setState({ fontFamily: defaultSettings.fontFamily })}
         >
@@ -204,7 +204,7 @@ export function SettingsDrawer({ sx, defaultSettings }) {
       )}
       {isFontSizeVisible && (
         <SmallBlock
-          label="Size"
+          label="大小"
           canReset={settings.state.fontSize !== defaultSettings.fontSize}
           onReset={() => settings.setState({ fontSize: defaultSettings.fontSize })}
           sx={{ gap: 5 }}
