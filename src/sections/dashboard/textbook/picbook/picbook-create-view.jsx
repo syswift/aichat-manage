@@ -6,7 +6,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { PicbookNewEditForm } from './picbook-new-edit-form';
+import { PicbookNewForm } from './picbook-new-form';
 
 // ----------------------------------------------------------------------
 
@@ -25,7 +25,7 @@ export function PicbookCreateView() {
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <PicbookNewEditForm />
+      <PicbookNewForm />
     </DashboardContent>
   );
 } 
