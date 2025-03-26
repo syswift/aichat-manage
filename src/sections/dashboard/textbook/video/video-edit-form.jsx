@@ -54,6 +54,10 @@ export function VideoEditForm({ currentVideo }) {
     const videoRef = useRef(null);
     const [audioItems, setAudioItems] = useState([]);
     const [audioOptions, setAudioOptions] = useState([]);
+    const [picbookItems, setPicbookItems] = useState([]);
+    const [picbookOptions, setPicbookOptions] = useState([]);
+    const [videoItems, setVideoItems] = useState([]);
+    const [videoOptions, setVideoOptions] = useState([]);
     const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
 
     // currentTime: Current playback position in seconds
@@ -98,6 +102,80 @@ export function VideoEditForm({ currentVideo }) {
         }
     }, [currentVideo]);
 
+    const fetchExistingPicbookItems = useCallback(async () => {
+        try {
+          if (!currentVideo?.id) return;
+          
+          const { data, error } = await supabase
+            .from('video_picbook_links')
+            .select(`
+              id,
+              timestamp,
+              picbook_id,
+              picbook:picbook_id (
+                id,
+                name
+              )
+            `)
+            .eq('video_id', currentVideo.id);
+          
+          if (error) {
+            console.error('Error fetching picbook links:', error);
+            return;
+          }
+          
+          if (data && data.length > 0) {
+            const formattedItems = data.map(link => ({
+              id: `picbook-${link.id}`,
+              name: link.picbook?.name || `绘本 ${link.id}`,
+              timestamp: link.timestamp,
+              picbookId: link.picbook_id
+            }));
+            
+            setPicbookItems(formattedItems);
+          }
+        } catch (error) {
+          console.error('Failed to fetch picbook links:', error.message);
+        }
+    }, [currentVideo]);
+
+    const fetchExistingVideoItems = useCallback(async () => {
+        try {
+          if (!currentVideo?.id) return;
+          
+          const { data, error } = await supabase
+            .from('video_video_links')
+            .select(`
+              id,
+              timestamp,
+              sub_video_id,
+              sub_video:sub_video_id (
+                id,
+                name
+              )
+            `)
+            .eq('video_id', currentVideo.id);
+          
+          if (error) {
+            console.error('Error fetching video links:', error);
+            return;
+          }
+          
+          if (data && data.length > 0) {
+            const formattedItems = data.map(link => ({
+              id: `video-${link.id}`,
+              name: link.sub_video?.name || `视频 ${link.id}`,
+              timestamp: link.timestamp,
+              videoId: link.sub_video_id
+            }));
+            
+            setVideoItems(formattedItems);
+          }
+        } catch (error) {
+          console.error('Failed to fetch video links:', error.message);
+        }
+    }, [currentVideo]);
+
     const fetchAudioOptions = useCallback(async () => {
         try {
           const { data, error } = await supabase
@@ -115,10 +193,50 @@ export function VideoEditForm({ currentVideo }) {
         }
     }, []);
 
+    const fetchPicbookOptions = useCallback(async () => {
+        try {
+          const { data, error } = await supabase
+            .from('picbook')
+            .select('id, name');
+          
+          if (error) {
+            console.error('Error fetching picbook options:', error);
+            return;
+          }
+          
+          setPicbookOptions(data || []);
+        } catch (error) {
+          console.error('Failed to fetch picbook options:', error.message);
+        }
+    }, []);
+
+    const fetchVideoOptions = useCallback(async () => {
+        try {
+          const { data, error } = await supabase
+            .from('video')
+            .select('id, name')
+            .neq('id', currentVideo?.id || ''); // Exclude current video
+          
+          if (error) {
+            console.error('Error fetching video options:', error);
+            return;
+          }
+          
+          setVideoOptions(data || []);
+        } catch (error) {
+          console.error('Failed to fetch video options:', error.message);
+        }
+    }, [currentVideo?.id]);
+
     useEffect(() => {
         fetchAudioOptions();
         fetchExistingAudioItems();
-    }, [fetchAudioOptions, fetchExistingAudioItems]);
+        fetchPicbookOptions();
+        fetchExistingPicbookItems();
+        fetchVideoOptions();
+        fetchExistingVideoItems();
+    }, [fetchAudioOptions, fetchExistingAudioItems, fetchPicbookOptions, fetchExistingPicbookItems, 
+        fetchVideoOptions, fetchExistingVideoItems]);
 
     const handleAudioSelection = (id, audioId) => {
         setAudioItems(audioItems.map(item => 
@@ -131,11 +249,33 @@ export function VideoEditForm({ currentVideo }) {
         ));
     };
 
+    const handlePicbookSelection = (id, picbookId) => {
+        setPicbookItems(picbookItems.map(item => 
+          item.id === id ? { 
+            ...item, 
+            picbookId,
+            name: picbookOptions.find(picbook => picbook.id === picbookId)?.name || item.name
+          } : item
+        ));
+    };
+
+    const handleVideoSelection = (id, videoId) => {
+        setVideoItems(videoItems.map(item => 
+          item.id === id ? { 
+            ...item, 
+            videoId,
+            name: videoOptions.find(video => video.id === videoId)?.name || item.name
+          } : item
+        ));
+    };
+
     const handleAddAudioItem = () => {
         const currentTimestamp = Math.floor(currentTime);
         
         // Check if this timestamp already exists in any audio item
-        const timestampExists = audioItems.some(item => Math.floor(item.timestamp) === currentTimestamp);
+        const timestampExists = audioItems.some(item => Math.floor(item.timestamp) === currentTimestamp) ||
+                                picbookItems.some(item => Math.floor(item.timestamp) === currentTimestamp) ||
+                                videoItems.some(item => Math.floor(item.timestamp) === currentTimestamp);
         
         if (timestampExists) {
             setNotification({
@@ -154,6 +294,56 @@ export function VideoEditForm({ currentVideo }) {
         }]);
     };
     
+    const handleAddPicbookItem = () => {
+        const currentTimestamp = Math.floor(currentTime);
+        
+        // Check if this timestamp already exists in any audio item
+        const timestampExists = audioItems.some(item => Math.floor(item.timestamp) === currentTimestamp) ||
+                                picbookItems.some(item => Math.floor(item.timestamp) === currentTimestamp) ||
+                                videoItems.some(item => Math.floor(item.timestamp) === currentTimestamp);
+        
+        if (timestampExists) {
+            setNotification({
+            open: true,
+            message: `时间戳 ${Math.floor(currentTimestamp / 60)}:${(currentTimestamp % 60).toString().padStart(2, '0')} 已存在！`,
+            severity: 'warning'
+            });
+            return; // Don't add a duplicate timestamp
+        }
+        
+        setPicbookItems([...picbookItems, { 
+            id: `picbook-${Date.now()}`, 
+            name: `绘本 ${picbookItems.length + 1}`,
+            timestamp: currentTimestamp,
+            picbookId: ''
+        }]);
+    };
+    
+    const handleAddVideoItem = () => {
+        const currentTimestamp = Math.floor(currentTime);
+        
+        // Check if this timestamp already exists in any audio item
+        const timestampExists = audioItems.some(item => Math.floor(item.timestamp) === currentTimestamp) ||
+                                picbookItems.some(item => Math.floor(item.timestamp) === currentTimestamp) ||
+                                videoItems.some(item => Math.floor(item.timestamp) === currentTimestamp);
+        
+        if (timestampExists) {
+            setNotification({
+            open: true,
+            message: `时间戳 ${Math.floor(currentTimestamp / 60)}:${(currentTimestamp % 60).toString().padStart(2, '0')} 已存在！`,
+            severity: 'warning'
+            });
+            return; // Don't add a duplicate timestamp
+        }
+        
+        setVideoItems([...videoItems, { 
+            id: `video-${Date.now()}`, 
+            name: `视频 ${videoItems.length + 1}`,
+            timestamp: currentTimestamp,
+            videoId: ''
+        }]);
+    };
+    
     // Add a function to close the notification
     const handleCloseNotification = () => {
         setNotification({ ...notification, open: false });
@@ -161,6 +351,14 @@ export function VideoEditForm({ currentVideo }) {
 
     const handleRemoveAudioItem = (id) => {
         setAudioItems(audioItems.filter(item => item.id !== id));
+    };
+
+    const handleRemovePicbookItem = (id) => {
+        setPicbookItems(picbookItems.filter(item => item.id !== id));
+    };
+
+    const handleRemoveVideoItem = (id) => {
+        setVideoItems(videoItems.filter(item => item.id !== id));
     };
 
     const handleQuizClick = useCallback(() => {
@@ -233,16 +431,36 @@ export function VideoEditForm({ currentVideo }) {
           }
           
           // 2. Handle audio items - first delete existing associations
-          const { error: deleteError } = await supabase
+          const { error: deleteAudioError } = await supabase
             .from('video_audio_links') // Adjust table name if different
             .delete()
             .eq('video_id', currentVideo.id);
             
-          if (deleteError) {
-            throw new Error(`删除原有音频关联失败: ${deleteError.message}`);
+          if (deleteAudioError) {
+            throw new Error(`删除原有音频关联失败: ${deleteAudioError.message}`);
           }
           
-          // 3. Insert new audio associations
+          // 3. Handle picbook items - first delete existing associations
+          const { error: deletePicbookError } = await supabase
+            .from('video_picbook_links') // Adjust table name if different
+            .delete()
+            .eq('video_id', currentVideo.id);
+            
+          if (deletePicbookError) {
+            throw new Error(`删除原有绘本关联失败: ${deletePicbookError.message}`);
+          }
+          
+          // 4. Handle video items - first delete existing associations
+          const { error: deleteVideoError } = await supabase
+            .from('video_video_links') // Adjust table name if different
+            .delete()
+            .eq('video_id', currentVideo.id);
+            
+          if (deleteVideoError) {
+            throw new Error(`删除原有视频关联失败: ${deleteVideoError.message}`);
+          }
+          
+          // 5. Insert new audio associations
           if (audioItems.length > 0) {
             const audioLinks = audioItems
               .filter(item => item.audioId) // Only include items with selected audio
@@ -261,6 +479,52 @@ export function VideoEditForm({ currentVideo }) {
                 
               if (insertError) {
                 throw new Error(`添加新音频关联失败: ${insertError.message}`);
+              }
+            }
+          }
+          
+          // 6. Insert new picbook associations
+          if (picbookItems.length > 0) {
+            const picbookLinks = picbookItems
+              .filter(item => item.picbookId) // Only include items with selected picbooks
+              .map(item => ({
+                type: 'picbook',
+                video_id: currentVideo.id,
+                picbook_id: item.picbookId,
+                timestamp: item.timestamp,
+                created_at: new Date().toISOString()
+              }));
+              
+            if (picbookLinks.length > 0) {
+              const { error: insertError } = await supabase
+                .from('video_picbook_links')
+                .insert(picbookLinks);
+                
+              if (insertError) {
+                throw new Error(`添加新绘本关联失败: ${insertError.message}`);
+              }
+            }
+          }
+          
+          // 7. Insert new video associations
+          if (videoItems.length > 0) {
+            const videoLinks = videoItems
+              .filter(item => item.videoId) // Only include items with selected videos
+              .map(item => ({
+                type: 'video',
+                video_id: currentVideo.id,
+                sub_video_id: item.videoId,
+                timestamp: item.timestamp,
+                created_at: new Date().toISOString()
+              }));
+              
+            if (videoLinks.length > 0) {
+              const { error: insertError } = await supabase
+                .from('video_video_links')
+                .insert(videoLinks);
+                
+              if (insertError) {
+                throw new Error(`添加新视频关联失败: ${insertError.message}`);
               }
             }
           }
@@ -399,12 +663,46 @@ export function VideoEditForm({ currentVideo }) {
 
                     <Collapse in={picbookOpen} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
-                            <ListItemButton sx={{ pl: 4 }}>
+                            {picbookItems.map((item) => (
+                            <ListItemButton key={item.id} sx={{ pl: 4, pr: 1, display: 'flex', alignItems: 'center' }}>
                                 <ListItemIcon>
-                                    <Iconify icon="ic:round-star-border" width={24} />
+                                <Iconify icon="mdi:book-open-page-variant" width={20} />
                                 </ListItemIcon>
-                                <ListItemText primary="占位" />
+                                <FormControl fullWidth size="small" sx={{ mr: 2 }}>
+                                <InputLabel id={`picbook-select-${item.id}-label`}>选择绘本</InputLabel>
+                                <Select
+                                    labelId={`picbook-select-${item.id}-label`}
+                                    id={`picbook-select-${item.id}`}
+                                    value={item.picbookId || ''}
+                                    label="选择绘本"
+                                    onChange={(e) => handlePicbookSelection(item.id, e.target.value)}
+                                >
+                                    {picbookOptions.map((picbook) => (
+                                    <MenuItem key={picbook.id} value={picbook.id}>
+                                        {picbook.name}
+                                    </MenuItem>
+                                    ))}
+                                </Select>
+                                </FormControl>
+                                <Typography variant="body2" color="text.secondary" sx={{ minWidth: 80 }}>
+                                {`${Math.floor(item.timestamp / 60)}:${(item.timestamp % 60).toString().padStart(2, '0')}`}
+                                </Typography>
+                                <IconButton edge="end" onClick={() => handleRemovePicbookItem(item.id)}>
+                                <Iconify icon="eva:trash-2-outline" width={20} />
+                                </IconButton>
                             </ListItemButton>
+                            ))}
+                            
+                            <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+                            <Button 
+                                startIcon={<Iconify icon="eva:plus-fill" />}
+                                onClick={handleAddPicbookItem}
+                                variant="outlined"
+                                size="small"
+                            >
+                                添加绘本
+                            </Button>
+                            </Box>
                         </List>
                     </Collapse>
 
@@ -439,12 +737,46 @@ export function VideoEditForm({ currentVideo }) {
 
                     <Collapse in={videoOpen} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
-                            <ListItemButton sx={{ pl: 4 }}>
+                            {videoItems.map((item) => (
+                            <ListItemButton key={item.id} sx={{ pl: 4, pr: 1, display: 'flex', alignItems: 'center' }}>
                                 <ListItemIcon>
-                                    <Iconify icon="ic:round-star-border" width={24} />
+                                <Iconify icon="mdi:video" width={20} />
                                 </ListItemIcon>
-                                <ListItemText primary="占位" />
+                                <FormControl fullWidth size="small" sx={{ mr: 2 }}>
+                                <InputLabel id={`video-select-${item.id}-label`}>选择视频</InputLabel>
+                                <Select
+                                    labelId={`video-select-${item.id}-label`}
+                                    id={`video-select-${item.id}`}
+                                    value={item.videoId || ''}
+                                    label="选择视频"
+                                    onChange={(e) => handleVideoSelection(item.id, e.target.value)}
+                                >
+                                    {videoOptions.map((video) => (
+                                    <MenuItem key={video.id} value={video.id}>
+                                        {video.name}
+                                    </MenuItem>
+                                    ))}
+                                </Select>
+                                </FormControl>
+                                <Typography variant="body2" color="text.secondary" sx={{ minWidth: 80 }}>
+                                {`${Math.floor(item.timestamp / 60)}:${(item.timestamp % 60).toString().padStart(2, '0')}`}
+                                </Typography>
+                                <IconButton edge="end" onClick={() => handleRemoveVideoItem(item.id)}>
+                                <Iconify icon="eva:trash-2-outline" width={20} />
+                                </IconButton>
                             </ListItemButton>
+                            ))}
+                            
+                            <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+                            <Button 
+                                startIcon={<Iconify icon="eva:plus-fill" />}
+                                onClick={handleAddVideoItem}
+                                variant="outlined"
+                                size="small"
+                            >
+                                添加视频
+                            </Button>
+                            </Box>
                         </List>
                     </Collapse>
                 </List>
