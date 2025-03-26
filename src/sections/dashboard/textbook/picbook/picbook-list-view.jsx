@@ -4,15 +4,12 @@ import { varAlpha } from 'minimal-shared/utils';
 import { useState, useEffect, useCallback } from 'react';
 import { useBoolean, useSetState } from 'minimal-shared/hooks';
 
-import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
-import Tooltip from '@mui/material/Tooltip';
 import TableBody from '@mui/material/TableBody';
-import IconButton from '@mui/material/IconButton';
 
 import { paths } from 'src/routes/paths';
 
@@ -23,12 +20,11 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { ConfirmDialog } from 'src/components/custom-dialog';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   useTable,
   emptyRows,
-  rowInPage,
   TableNoData,
   getComparator,
   TableEmptyRows,
@@ -65,10 +61,6 @@ export function PicbookListView() {
     status: 'all',
   });
 
-  useEffect(() => {
-    fetchPicbooks();
-  }, []);
-
   const fetchPicbooks = useCallback(async () => {
     const { data, error } = await supabase
       .from('picbook')
@@ -79,6 +71,10 @@ export function PicbookListView() {
       setTableData(data);
     }
   }, []);
+
+  useEffect(() => {
+    fetchPicbooks();
+  }, [fetchPicbooks]);
 
   const handleFilterStatus = useCallback(
     (event, newValue) => {
@@ -111,8 +107,58 @@ export function PicbookListView() {
 
   const handleDeleteRow = useCallback(
     async (id) => {
+      // Get the picbook data first to access cover_url and folder_name
+      const { data: picbookData, error: fetchError } = await supabase
+        .from('picbook')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (fetchError || !picbookData) {
+        console.error('Error fetching picbook data:', fetchError);
+        return;
+      }
+
+      // 1. Delete cover image from picbookcover bucket
+      if (picbookData.cover_url) {
+        const coverFileName = picbookData.cover_url.replace('https://reecurbemkhjmectdkyp.supabase.co/storage/v1/object/public/picbookcover/', '');
+        const { error: coverDeleteError } = await supabase.storage
+          .from('picbookcover')
+          .remove([coverFileName]);
+          
+        if (coverDeleteError) {
+          console.error('Error deleting cover image:', coverDeleteError);
+        }
+      }
+
+      // 2. Delete all files in the folder from picbook bucket
+      if (picbookData.folder_name) {
+        // List all files in the folder
+        const { data: folderFiles, error: listError } = await supabase.storage
+          .from('picbook')
+          .list(picbookData.folder_name);
+          
+        if (!listError && folderFiles && folderFiles.length > 0) {
+          // Create an array of file paths to delete
+          const filePaths = folderFiles.map(file => `${picbookData.folder_name}/${file.name}`);
+          
+          // Delete all files in the folder
+          const { error: filesDeleteError } = await supabase.storage
+            .from('picbook')
+            .remove(filePaths);
+            
+          if (filesDeleteError) {
+            console.error('Error deleting folder files:', filesDeleteError);
+          }
+        }
+      }
+
+      // 3. Delete the picbook record from the database
       const { error } = await supabase.from('picbook').delete().eq('id', id);
-      if (!error) {
+      if (error) {
+        console.error('Error deleting picbook record:', error);
+      } else {
+        console.log('Picbook deleted successfully!');
         await fetchPicbooks();
       }
     },
@@ -121,10 +167,43 @@ export function PicbookListView() {
 
   const handleDeleteRows = useCallback(
     async (selectedIds) => {
+      // For each selected ID, we need to perform the same operations as handleDeleteRow
+      for (const id of selectedIds) {
+        // Get the picbook data first
+        const { data: picbookData, error: fetchError } = await supabase
+          .from('picbook')
+          .select('*')
+          .eq('id', id)
+          .single();
+          
+        if (!fetchError && picbookData) {
+          // 1. Delete cover image
+          if (picbookData.cover_url) {
+            const coverFileName = picbookData.cover_url.replace('https://reecurbemkhjmectdkyp.supabase.co/storage/v1/object/public/picbookcover/', '');
+            await supabase.storage.from('picbookcover').remove([coverFileName]);
+          }
+  
+          // 2. Delete all files in the folder
+          if (picbookData.folder_name) {
+            const { data: folderFiles } = await supabase.storage
+              .from('picbook')
+              .list(picbookData.folder_name);
+              
+            if (folderFiles && folderFiles.length > 0) {
+              const filePaths = folderFiles.map(file => `${picbookData.folder_name}/${file.name}`);
+              await supabase.storage.from('picbook').remove(filePaths);
+            }
+          }
+        }
+      }
+      
+      // 3. Delete all selected picbook records
       const { error } = await supabase.from('picbook').delete().in('id', selectedIds);
       if (!error) {
         await fetchPicbooks();
         table.onSelectAllRows(false);
+      } else {
+        console.error('Error deleting picbook records:', error);
       }
     },
     [fetchPicbooks, table]
@@ -333,4 +412,4 @@ function applyFilter({ inputData, comparator, filters }) {
   }
 
   return inputData;
-} 
+}
