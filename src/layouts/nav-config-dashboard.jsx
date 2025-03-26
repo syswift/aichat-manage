@@ -48,7 +48,7 @@ export const navData = [
     subheader: 'Overview',
     items: [
       {
-        title: '调试页面',
+        title: '统计页面',
         path: paths.dashboard.root,
         icon: ICONS.dashboard,
         info: <Label>v{CONFIG.appVersion}</Label>,
