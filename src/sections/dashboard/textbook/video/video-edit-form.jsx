@@ -46,6 +46,7 @@ export const VideoSchema = zod.object({
 export function VideoEditForm({ currentVideo }) {
     const [uploading, setUploading] = useState(false);
     const [quizOpen, setquizOpen] = useState(false);
+    const [videoOpen, setvideoOpen] = useState(false);
     const [picbookOpen, setpicbookOpen] = useState(false);
     const [audioOpen, setaudioOpen] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
@@ -165,6 +166,10 @@ export function VideoEditForm({ currentVideo }) {
     const handleQuizClick = useCallback(() => {
         setquizOpen((prev) => !prev);
     }, []);
+
+    const handleVideoClick = useCallback(() => {
+      setvideoOpen((prev) => !prev);
+  }, []);
 
     const handlePicbookClick = useCallback(() => {
         setpicbookOpen((prev) => !prev);
@@ -413,6 +418,26 @@ export function VideoEditForm({ currentVideo }) {
                     </ListItemButton>
 
                     <Collapse in={quizOpen} timeout="auto" unmountOnExit>
+                        <List component="div" disablePadding>
+                            <ListItemButton sx={{ pl: 4 }}>
+                                <ListItemIcon>
+                                    <Iconify icon="ic:round-star-border" width={24} />
+                                </ListItemIcon>
+                                <ListItemText primary="占位" />
+                            </ListItemButton>
+                        </List>
+                    </Collapse>
+
+                    <ListItemButton onClick={handleVideoClick}>
+                        <ListItemIcon>
+                            <Iconify icon="si:actions-duotone" width={24} />
+                        </ListItemIcon>
+                        
+                        <ListItemText primary="视频" />
+                        <Iconify icon={videoOpen ? 'eva:arrow-ios-upward-fill' : 'eva:arrow-ios-downward-fill'} />
+                    </ListItemButton>
+
+                    <Collapse in={videoOpen} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
                             <ListItemButton sx={{ pl: 4 }}>
                                 <ListItemIcon>

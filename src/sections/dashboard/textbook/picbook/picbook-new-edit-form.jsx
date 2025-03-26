@@ -34,7 +34,7 @@ export const PicbookSchema = zod.object({
 
 export function PicbookNewEditForm({ currentPicbook }) {
   const router = useRouter();
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -45,17 +45,27 @@ export function PicbookNewEditForm({ currentPicbook }) {
       note: currentPicbook?.note || '',
       status: currentPicbook?.status || 'active',
       isVerified: currentPicbook?.isVerified || true,
+      multiUpload: [],
     },
   });
 
-  const { reset } = methods;
+  const handleDropMultiFile = useCallback(
+    (acceptedFiles) => {
+      setFiles([...files, ...acceptedFiles]);
+    },
+    [files]
+  );
 
-  const handleDropSingleFile = useCallback((acceptedFiles) => {
-    const newFile = acceptedFiles[0];
-    if (newFile) {
-      setFile(newFile);
-    }
-  }, []);
+  const handleRemoveFile = (inputFile) => {
+    const filesFiltered = files.filter((fileFiltered) => fileFiltered !== inputFile);
+    setFiles(filesFiltered);
+  };
+
+  const handleRemoveAllFiles = () => {
+    setFiles([]);
+  };
+
+  const { reset } = methods;
 
   const onSubmit = methods.handleSubmit(async (data) => {
     setUploading(true);
@@ -63,26 +73,6 @@ export function PicbookNewEditForm({ currentPicbook }) {
     try {
       let picbookUrl = '';
       let coverUrl = '';
-
-      if (file) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('picbooks')
-          .upload(filePath, file);
-
-        if (uploadError) {
-          throw uploadError;
-        }
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('picbooks')
-          .getPublicUrl(filePath);
-
-        picbookUrl = publicUrl;
-      }
 
       const { error: insertError } = await supabase
         .from('picbook')
@@ -102,7 +92,6 @@ export function PicbookNewEditForm({ currentPicbook }) {
       }
 
       reset();
-      setFile(null);
       console.log('创建成功!');
       router.push(paths.dashboard.textbook.picbook.root);
 
@@ -117,35 +106,8 @@ export function PicbookNewEditForm({ currentPicbook }) {
   return (
     <Form methods={methods} onSubmit={onSubmit}>
       <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card sx={{ pt: 10, pb: 5, px: 3 }}>
-            <Box sx={{ mb: 5 }}>
-              <Typography 
-                name="file"
-                fontSize="24px"
-                fontWeight={600}
-                align="center">
-                上传绘本
-              </Typography>
-              <Field.Upload
-                name="file"
-                accept={{ 'image/*,.pdf': [] }}
-                maxSize={50 * 1024 * 1024}
-                value={file}
-                onDrop={handleDropSingleFile}
-                onDelete={() => setFile(null)}
-                sx={{
-                  py: 1,
-                  width: 'auto',
-                  height: 'auto',
-                  borderRadius: 1.5,
-                }}
-              />
-            </Box>
-          </Card>
-        </Grid>
 
-        <Grid size={{ xs: 12, md: 8 }}>
+        <Grid size={{ xs: 12, md: 12 }}>
           <Card sx={{ p: 3 }}>
             <Box
               sx={{
@@ -157,6 +119,27 @@ export function PicbookNewEditForm({ currentPicbook }) {
             >
               <Field.Text name="name" label="绘本名称" required />
               <Field.Text name="note" label="备注" />
+              <Box sx={{ mb: 5 }}>
+                <Typography 
+                  name="upload"
+                  fontSize="24px"
+                  fontWeight={600}
+                  align="center">
+                  上传绘本
+                </Typography>
+                <Field.Upload
+                  multiple
+                  thumbnail
+                  name="multiUpload"
+                  value={files}
+                  accept={{ 'image/*': [] }}
+                  maxSize={500 * 1024 * 1024}
+                  onDrop={handleDropMultiFile}
+                  onRemove={handleRemoveFile}
+                  onRemoveAll={handleRemoveAllFiles}
+                  onUpload={() => console.info('ON UPLOAD')}
+                />
+              </Box>
               <Box>
                 <Typography 
                   fontSize="24px"
